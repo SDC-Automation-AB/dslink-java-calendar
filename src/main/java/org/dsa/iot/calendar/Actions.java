@@ -2,6 +2,7 @@ package org.dsa.iot.calendar;
 
 import org.dsa.iot.calendar.abstractions.BaseCalendar;
 import org.dsa.iot.calendar.abstractions.DSAEvent;
+import org.dsa.iot.calendar.abstractions.DSAIdentifier;
 import org.dsa.iot.calendar.caldav.CalDAVCalendar;
 import org.dsa.iot.calendar.google.GoogleCalendar;
 import org.dsa.iot.dslink.node.Node;
@@ -18,7 +19,9 @@ import org.dsa.iot.dslink.util.handler.Handler;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import static org.dsa.iot.calendar.CalendarHandler.calendars;
 
@@ -229,6 +232,13 @@ public class Actions {
                             Date endDate = BaseCalendar.DATE_FORMAT.parse(dates[1]);
                             event.setStart(startDate);
                             event.setEnd(endDate);
+                            if (calendar.supportsMultipleCalendars()) {
+                                String calendar = actionResult.getParameter("calendar").getString();
+                                int indexOfPipe = calendar.lastIndexOf('|');
+                                String calTitle = calendar.substring(0, indexOfPipe);
+                                String calUid = calendar.substring(indexOfPipe + 1);
+                                event.setCalendar(new DSAIdentifier(calUid, calTitle));
+                            }
                             calendar.createEvent(event);
                             calendar.updateCalendar();
                             actionResult.getTable().addRow(Row.make(new Value(true)));
@@ -244,6 +254,13 @@ public class Actions {
             Parameter parameter = new Parameter("timeRange", ValueType.TIME);
             parameter.setEditorType(EditorType.DATE_RANGE);
             addParameter(parameter);
+            if (calendar.supportsMultipleCalendars()) {
+                List<String> calendars = new ArrayList<>();
+                for (DSAIdentifier id : calendar.getCalendars()) {
+                    calendars.add(id.getTitle() + "|" + id.getUid());
+                }
+                addParameter(new Parameter("calendar", ValueType.makeEnum(calendars)));
+            }
 
             addResult(new Parameter("success", ValueType.BOOL));
         }
@@ -273,6 +290,10 @@ public class Actions {
                             actionResult.getNode().getParent().getChild("description").setValue(new Value(desc));
                             actionResult.getNode().getParent().getChild("start").setValue(new Value(dates[0]));
                             actionResult.getNode().getParent().getChild("end").setValue(new Value(dates[1]));
+                            if (calendar.supportsMultipleCalendars()) {
+                                event.setCalendar(new DSAIdentifier(actionResult.getNode().getParent().getChild("calendarId").getValue().getString(),
+                                        actionResult.getNode().getParent().getChild("calendar").getValue().getString()));
+                            }
                             calendar.deleteEvent(actionResult.getNode().getParent().getName(), false);
                             calendar.createEvent(event);
                             actionResult.getTable().addRow(Row.make(new Value(true)));

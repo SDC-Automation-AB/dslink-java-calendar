@@ -128,21 +128,14 @@ public class GoogleCalendar extends BaseCalendar {
         Event googleEvent = new Event();
         EventDateTime startEventDateTime = new EventDateTime();
         EventDateTime endEventDateTime = new EventDateTime();
-        startEventDateTime.setDateTime(new DateTime(event.getStart(), TimeZone.getTimeZone(event.getTimeZone())));
-        endEventDateTime.setDateTime(new DateTime(event.getEnd(), TimeZone.getTimeZone(event.getTimeZone())));
-        /*if (event.getUniqueId() != null) {
-            // Add existing unique identifier.
-            googleEvent.setId(event.getUniqueId());
-        } else {
-            // Generate a new unique identifier.
-            googleEvent.setId(Generators.timeBasedGenerator().generate().toString());
-        }*/
+        startEventDateTime.setDateTime(new DateTime(event.getStart()));
+        endEventDateTime.setDateTime(new DateTime(event.getEnd()));
         googleEvent.setSummary(event.getTitle());
         googleEvent.setDescription(event.getDescription());
         googleEvent.setStart(startEventDateTime);
         googleEvent.setEnd(endEventDateTime);
         try {
-            calendar.events().insert("l.gorence@dglogik.com", googleEvent).execute();
+            calendar.events().insert(event.getCalendar().getUid(), googleEvent).execute();
         } catch (IOException e) {
             e.printStackTrace();
         }
