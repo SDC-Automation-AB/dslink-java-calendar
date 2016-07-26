@@ -1,0 +1,50 @@
+apply plugin: 'java'
+apply plugin: 'findbugs'
+apply plugin: 'application'
+
+version '0.1.0'
+
+mainClassName = 'org.dsa.iot.calendar.Main'
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+repositories {
+    mavenCentral()
+
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
+
+    maven {
+        url "https://raw.githubusercontent.com/caldav4j/maven/master/repo/"
+    }
+}
+
+dependencies {
+    // DSLink
+    compile 'org.iot-dsa:dslink:0.16.0-SNAPSHOT'
+    compile 'org.iot-dsa:commons:0.16.0-SNAPSHOT'
+    compile 'org.iot-dsa:historian:0.16.0-SNAPSHOT'
+
+    // CalDAV support
+    compile 'org.osaf:caldav4j:0.8-SNAPSHOT'
+    compile 'com.fasterxml.uuid:java-uuid-generator:3.1.4'
+
+    // Google Calendar support
+    compile 'com.google.api-client:google-api-client-java6:1.22.0'
+    compile 'com.google.apis:google-api-services-calendar:v3-rev202-1.22.0'
+}
+
+tasks.withType(FindBugs) {
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}
+
+run {
+    args System.getProperty("exec.args", "").split()
+    workingDir project.buildDir
+}
+
+applicationDistribution.from new File(project.projectDir, "/dslink.json")
