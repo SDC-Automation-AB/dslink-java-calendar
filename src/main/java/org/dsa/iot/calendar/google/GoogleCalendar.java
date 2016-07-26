@@ -1,5 +1,6 @@
 package org.dsa.iot.calendar.google;
 
+import com.fasterxml.uuid.Generators;
 import com.google.api.client.auth.oauth2.*;
 import com.google.api.client.googleapis.auth.oauth2.GoogleOAuthConstants;
 import com.google.api.client.http.GenericUrl;
@@ -7,12 +8,14 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.DateTime;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.CalendarList;
 import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
+import com.google.api.services.calendar.model.EventDateTime;
 import org.dsa.iot.calendar.abstractions.BaseCalendar;
 import org.dsa.iot.calendar.abstractions.DSAIdentifier;
 import org.dsa.iot.calendar.abstractions.DSAEvent;
@@ -38,7 +41,7 @@ public class GoogleCalendar extends BaseCalendar {
     private JsonFactory jsonGenerator;
     private Calendar calendar;
     private Credential credential;
-    private final String userId = "user";
+    private final String userId;
 
     public GoogleCalendar(Node calendarNode, String clientId, String clientSecret) throws GeneralSecurityException, IOException {
         super(calendarNode.getChild("events"));
@@ -46,9 +49,10 @@ public class GoogleCalendar extends BaseCalendar {
         this.clientSecret = clientSecret;
         this.httpTransport = new NetHttpTransport();
         this.jsonGenerator = JacksonFactory.getDefaultInstance();
+        userId = calendarNode.getName();
     }
 
-    public void attemptAuthorize(Node calendarNode) throws IOException {
+    public void attemptAuthorize(final Node calendarNode) throws IOException {
         final AuthorizationCodeFlow flow = new AuthorizationCodeFlow.Builder(BearerToken.authorizationHeaderAccessMethod(),
                 httpTransport,
                 jsonGenerator,
@@ -64,13 +68,13 @@ public class GoogleCalendar extends BaseCalendar {
             url.setRedirectUri(GoogleOAuthConstants.OOB_REDIRECT_URI);
             url.set("accessType", "offline");
             url.set("approvalPrompt", "force");
-            calendarNode.createChild("googleLoginUrl")
+            final Node urlNode = calendarNode.createChild("googleLoginUrl")
                     .setDisplayName("Google Login URL")
                     .setSerializable(false)
                     .setValueType(ValueType.STRING)
                     .setValue(new Value(url.build()))
                     .build();
-            Node codeNode = calendarNode.createChild("googleLoginCode")
+            final Node codeNode = calendarNode.createChild("googleLoginCode")
                     .setDisplayName("Google Login Code")
                     .setSerializable(false)
                     .setValueType(ValueType.STRING)
@@ -83,6 +87,8 @@ public class GoogleCalendar extends BaseCalendar {
                     if (value != null && value.getString() != null) {
                         try {
                             authorize(flow, value.getString());
+                            calendarNode.removeChild(urlNode);
+                            calendarNode.removeChild(codeNode);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -94,8 +100,8 @@ public class GoogleCalendar extends BaseCalendar {
 
     private void authorizeExistingCredential(AuthorizationCodeFlow flow, String userId) throws IOException {
         Credential newCredential = flow.loadCredential(userId);
-        if (newCredential != null
-                && (newCredential.getRefreshToken() != null || newCredential.getExpiresInSeconds() > 60)) {
+        if (newCredential != null &&
+                (newCredential.getRefreshToken() != null || newCredential.getExpiresInSeconds() > 60)) {
             credential = newCredential;
             calendar = new Calendar.Builder(httpTransport,
                     jsonGenerator,
@@ -119,13 +125,40 @@ public class GoogleCalendar extends BaseCalendar {
 
     @Override
     public void createEvent(DSAEvent event) {
-        /*Event googleEvent = new Event();
+        Event googleEvent = new Event();
+        EventDateTime startEventDateTime = new EventDateTime();
+        EventDateTime endEventDateTime = new EventDateTime();
+        startEventDateTime.setDateTime(new DateTime(event.getStart(), TimeZone.getTimeZone(event.getTimeZone())));
+        endEventDateTime.setDateTime(new DateTime(event.getEnd(), TimeZone.getTimeZone(event.getTimeZone())));
+        /*if (event.getUniqueId() != null) {
+            // Add existing unique identifier.
+            googleEvent.setId(event.getUniqueId());
+        } else {
+            // Generate a new unique identifier.
+            googleEvent.setId(Generators.timeBasedGenerator().generate().toString());
+        }*/
         googleEvent.setSummary(event.getTitle());
-        googleEvent.setDescription(event.getDescription());*/
+        googleEvent.setDescription(event.getDescription());
+        googleEvent.setStart(startEventDateTime);
+        googleEvent.setEnd(endEventDateTime);
+        try {
+            calendar.events().insert("l.gorence@dglogik.com", googleEvent).execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void deleteEvent(String uid, boolean destroyNode) {
+        try {
+            String calendarId = eventsNode.getChild(uid).getChild("calendarId").getValue().getString();
+            calendar.events().delete(calendarId, uid).execute();
+            if (destroyNode) {
+                eventsNode.removeChild(uid);
+            }
+        } catch (IOException | NullPointerException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

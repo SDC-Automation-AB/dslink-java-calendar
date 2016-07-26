@@ -28,7 +28,6 @@ public abstract class BaseCalendar {
     public abstract List<DSAEvent> getEvents();
 
     public void startUpdateLoop() {
-        System.out.println("Started update loop");
         LoopProvider.getProvider().schedulePeriodic(new Runnable() {
             @Override
             public void run() {

@@ -11,6 +11,7 @@ public class DSAEvent {
     private Date end;
     private String timeZone;
     private DSAIdentifier calendarIdentifier;
+    private boolean readOnly;
 
     public DSAEvent(String title) {
         this.title = title;
@@ -45,6 +46,10 @@ public class DSAEvent {
         return calendarIdentifier;
     }
 
+    public boolean isReadOnly() {
+        return readOnly;
+    }
+
     public void setUniqueId(String uniqueId) {
         this.uniqueId = uniqueId;
     }
@@ -71,5 +76,9 @@ public class DSAEvent {
 
     public void setCalendar(DSAIdentifier calendarIdentifier) {
         this.calendarIdentifier = calendarIdentifier;
+    }
+
+    public void setReadOnly(boolean readOnly) {
+        this.readOnly = readOnly;
     }
 }

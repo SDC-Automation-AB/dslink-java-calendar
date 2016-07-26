@@ -299,6 +299,7 @@ public class Actions {
                 @Override
                 public void handle(ActionResult event) {
                     calendar.deleteEvent(uid, false);
+                    calendar.updateCalendar();
                 }
             });
         }

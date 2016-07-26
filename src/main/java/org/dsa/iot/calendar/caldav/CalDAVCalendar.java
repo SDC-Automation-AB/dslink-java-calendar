@@ -85,16 +85,12 @@ public class CalDAVCalendar extends BaseCalendar {
                 }
                 ComponentList componentList = calendar.getComponents().getComponents(Component.VEVENT);
                 for (VEvent vEvent : (Iterable<VEvent>) componentList) {
-                    if (vEvent.getUid() == null && vEvent.getSummary() == null) {
+                    if (vEvent.getUid() == null || vEvent.getSummary() == null) {
                         continue;
                     }
                     DSAEvent event = new DSAEvent(
                         vEvent.getSummary().getValue()
                     );
-                    if (vEvent.getUid() == null) {
-                        // TODO: Log error
-                        continue;
-                    }
                     event.setUniqueId(vEvent.getUid().getValue());
                     if (vEvent.getDescription() != null) {
                         event.setDescription(vEvent.getDescription().getValue());
