@@ -228,10 +228,13 @@ public class Actions {
                             if (dates.length != 2) {
                                 throw new Exception("Unexpected dates length");
                             }
+                            System.out.println(timeRange);
                             Date startDate = BaseCalendar.DATE_FORMAT.parse(dates[0]);
                             Date endDate = BaseCalendar.DATE_FORMAT.parse(dates[1]);
+                            String location = actionResult.getParameter("location", new Value("")).getString();
                             event.setStart(startDate);
                             event.setEnd(endDate);
+                            event.setLocation(location);
                             if (calendar.supportsMultipleCalendars()) {
                                 String calendar = actionResult.getParameter("calendar").getString();
                                 int indexOfPipe = calendar.lastIndexOf('|');
@@ -251,6 +254,7 @@ public class Actions {
             });
             addParameter(new Parameter("title", ValueType.STRING));
             addParameter(new Parameter("desc", ValueType.STRING));
+            addParameter(new Parameter("location", ValueType.STRING));
             Parameter parameter = new Parameter("timeRange", ValueType.TIME);
             parameter.setEditorType(EditorType.DATE_RANGE);
             addParameter(parameter);
@@ -275,6 +279,7 @@ public class Actions {
                     if (title != null && !title.isEmpty()) {
                         String desc = actionResult.getParameter("desc", new Value("")).getString();
                         String timeRange = actionResult.getParameter("timeRange").getString();
+                        String location = actionResult.getParameter("location", new Value("")).getString();
                         DSAEvent event = new DSAEvent(title);
                         event.setDescription(desc);
                         try {
@@ -286,10 +291,12 @@ public class Actions {
                             Date endDate = BaseCalendar.DATE_FORMAT.parse(dates[1]);
                             event.setStart(startDate);
                             event.setEnd(endDate);
+                            event.setLocation(location);
                             actionResult.getNode().getParent().setDisplayName(title);
                             actionResult.getNode().getParent().getChild("description").setValue(new Value(desc));
                             actionResult.getNode().getParent().getChild("start").setValue(new Value(dates[0]));
                             actionResult.getNode().getParent().getChild("end").setValue(new Value(dates[1]));
+                            actionResult.getNode().getParent().getChild("location").setValue(new Value(location));
                             if (calendar.supportsMultipleCalendars()) {
                                 event.setCalendar(new DSAIdentifier(actionResult.getNode().getParent().getChild("calendarId").getValue().getString(),
                                         actionResult.getNode().getParent().getChild("calendar").getValue().getString()));
@@ -306,6 +313,7 @@ public class Actions {
             });
             addParameter(new Parameter("title", ValueType.STRING));
             addParameter(new Parameter("desc", ValueType.STRING));
+            addParameter(new Parameter("location", ValueType.STRING));
             Parameter parameter = new Parameter("timeRange", ValueType.TIME);
             parameter.setEditorType(EditorType.DATE_RANGE);
             addParameter(parameter);

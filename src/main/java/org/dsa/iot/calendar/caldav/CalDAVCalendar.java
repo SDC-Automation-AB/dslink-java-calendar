@@ -101,6 +101,9 @@ public class CalDAVCalendar extends BaseCalendar {
                     if (vEvent.getEndDate() != null) {
                         event.setEnd(vEvent.getEndDate().getDate());
                     }
+                    if (vEvent.getLocation() != null) {
+                        event.setLocation(vEvent.getLocation().getValue());
+                    }
                     event.setTimeZone(timeZone);
                     events.add(event);
                 }

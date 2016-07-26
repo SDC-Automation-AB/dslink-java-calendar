@@ -15,10 +15,6 @@ public abstract class BaseCalendar {
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
     protected final Node eventsNode;
 
-    static {
-        DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-    }
-
     public BaseCalendar(Node eventsNode) {
         this.eventsNode = eventsNode;
     }
@@ -83,6 +79,10 @@ public abstract class BaseCalendar {
                         .setDisplayName("Calendar ID")
                         .setValueType(ValueType.STRING)
                         .build();
+                eventNode.createChild("location")
+                        .setDisplayName("Location")
+                        .setValueType(ValueType.STRING)
+                        .build();
             }
             String title = event.getTitle();
             Node eventNode = eventsNode.getChild(event.getUniqueId());
@@ -90,6 +90,7 @@ public abstract class BaseCalendar {
             Date startString = event.getStart();
             Date endString = event.getEnd();
             String timeZone = event.getTimeZone();
+            String location = event.getLocation();
             DSAIdentifier calendarIdentifier = event.getCalendar();
             if (title != null) {
                 eventNode.setDisplayName(title);
@@ -105,6 +106,9 @@ public abstract class BaseCalendar {
             }
             if (timeZone != null) {
                 eventNode.getChild("timeZone").setValue(new Value(timeZone));
+            }
+            if (location != null) {
+                eventNode.getChild("location").setValue(new Value(location));
             }
             if (calendarIdentifier != null) {
                 eventNode.getChild("calendar").setValue(new Value(calendarIdentifier.getTitle()));

@@ -129,11 +129,17 @@ public class GoogleCalendar extends BaseCalendar {
         EventDateTime startEventDateTime = new EventDateTime();
         EventDateTime endEventDateTime = new EventDateTime();
         startEventDateTime.setDateTime(new DateTime(event.getStart()));
+
+        startEventDateTime.setTimeZone("Etc/UTC");
+        //startEventDateTime.setTimeZone("UTC");
         endEventDateTime.setDateTime(new DateTime(event.getEnd()));
+        endEventDateTime.setTimeZone("Etc/UTC");
+        //endEventDateTime.setTimeZone("UTC");
         googleEvent.setSummary(event.getTitle());
         googleEvent.setDescription(event.getDescription());
         googleEvent.setStart(startEventDateTime);
         googleEvent.setEnd(endEventDateTime);
+        googleEvent.setLocation(event.getLocation());
         try {
             calendar.events().insert(event.getCalendar().getUid(), googleEvent).execute();
         } catch (IOException e) {
@@ -164,6 +170,7 @@ public class GoogleCalendar extends BaseCalendar {
                     DSAEvent dsaEvent = new DSAEvent(event.getSummary());
                     dsaEvent.setUniqueId(event.getId());
                     dsaEvent.setDescription(event.getDescription());
+                    dsaEvent.setLocation(event.getLocation());
                     dsaEvent.setCalendar(new DSAIdentifier(listEntry.getId(), listEntry.getSummary()));
                     if (event.getStart() != null) {
                         if (event.getStart().getDate() != null) {
