@@ -8,17 +8,16 @@ import org.dsa.iot.calendar.google.GoogleCalendar;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.Permission;
-import org.dsa.iot.dslink.node.actions.Action;
-import org.dsa.iot.dslink.node.actions.ActionResult;
-import org.dsa.iot.dslink.node.actions.EditorType;
-import org.dsa.iot.dslink.node.actions.Parameter;
+import org.dsa.iot.dslink.node.actions.*;
 import org.dsa.iot.dslink.node.actions.table.Row;
+import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.handler.Handler;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -80,6 +79,14 @@ public class Actions {
         deleteEventNode.setSerializable(false);
         deleteEventNode.setAction(new RemoveEvent(calendars.get(eventNode.getParent().getParent().getName()), eventNode.getName()));
         return deleteEventNode.build();
+    }
+
+    public static Node addGetEventsRange(Node calendarNode) {
+        NodeBuilder getEventsRange = calendarNode.createChild("getEventsRange");
+        getEventsRange.setDisplayName("Get Events Range");
+        getEventsRange.setSerializable(false);
+        getEventsRange.setAction(new GetEvents(calendars.get(calendarNode.getName())));
+        return getEventsRange.build();
     }
 
     private static class AddCalDAVCalendar extends Action {
@@ -177,6 +184,7 @@ public class Actions {
                         Actions.addCreateEventNode(calendarNode);
                         Actions.addRemoveCalendarNode(calendarNode);
                         Actions.addRefreshCalendarNode(calendarNode);
+                        Actions.addGetEventsRange(calendarNode);
                         cal.attemptAuthorize(calendarNode);
                     } catch (GeneralSecurityException | IOException e) {
                         e.printStackTrace();
@@ -331,6 +339,35 @@ public class Actions {
                     calendar.updateCalendar();
                 }
             });
+        }
+    }
+
+    private static class GetEvents extends Action {
+        public GetEvents(final BaseCalendar calendar) {
+            super(Permission.READ, new Handler<ActionResult>() {
+                @Override
+                public void handle(ActionResult event) {
+                    try {
+                        String timeRange = event.getParameter("timeRange").getString();
+                        String[] dates = timeRange.split("/", 2);
+                        Date startDate = BaseCalendar.DATE_FORMAT.parse(dates[0]);
+                        Date endDate = BaseCalendar.DATE_FORMAT.parse(dates[1]);
+                        List<String> events = calendar.getEvents(startDate, endDate);
+                        event.getTable().setMode(Table.Mode.APPEND);
+                        for (String s : events) {
+                            event.getTable().addRow(Row.make(new Value(s)));
+                        }
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            Parameter parameter = new Parameter("timeRange", ValueType.TIME);
+            parameter.setEditorType(EditorType.DATE_RANGE);
+            addParameter(parameter);
+
+            addResult(new Parameter("ID", ValueType.STRING));
+            setResultType(ResultType.TABLE);
         }
     }
 }

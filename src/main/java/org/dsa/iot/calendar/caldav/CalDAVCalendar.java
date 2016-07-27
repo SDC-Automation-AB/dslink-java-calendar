@@ -2,6 +2,9 @@ package org.dsa.iot.calendar.caldav;
 
 import com.fasterxml.uuid.Generators;
 import net.fortuna.ical4j.model.*;
+import net.fortuna.ical4j.model.Calendar;
+import net.fortuna.ical4j.model.Date;
+import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VTimeZone;
 import net.fortuna.ical4j.model.property.Description;
@@ -18,8 +21,7 @@ import org.osaf.caldav4j.methods.HttpClient;
 import org.osaf.caldav4j.model.request.CalendarQuery;
 import org.osaf.caldav4j.util.GenerateQuery;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class CalDAVCalendar extends BaseCalendar {
     private final HttpClient httpClient;
@@ -113,5 +115,10 @@ public class CalDAVCalendar extends BaseCalendar {
         }
 
         return events;
+    }
+
+    @Override
+    public List<String> getEvents(java.util.Date start, java.util.Date end) {
+        return new ArrayList<>();
     }
 }

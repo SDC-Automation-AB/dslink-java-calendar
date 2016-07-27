@@ -1,6 +1,5 @@
 package org.dsa.iot.calendar.google;
 
-import com.fasterxml.uuid.Generators;
 import com.google.api.client.auth.oauth2.*;
 import com.google.api.client.googleapis.auth.oauth2.GoogleOAuthConstants;
 import com.google.api.client.http.GenericUrl;
@@ -16,6 +15,7 @@ import com.google.api.services.calendar.model.CalendarList;
 import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
+import org.dsa.iot.calendar.Actions;
 import org.dsa.iot.calendar.abstractions.BaseCalendar;
 import org.dsa.iot.calendar.abstractions.DSAIdentifier;
 import org.dsa.iot.calendar.abstractions.DSAEvent;
@@ -129,12 +129,9 @@ public class GoogleCalendar extends BaseCalendar {
         EventDateTime startEventDateTime = new EventDateTime();
         EventDateTime endEventDateTime = new EventDateTime();
         startEventDateTime.setDateTime(new DateTime(event.getStart()));
-
-        startEventDateTime.setTimeZone("Etc/UTC");
-        //startEventDateTime.setTimeZone("UTC");
+        startEventDateTime.setTimeZone("UTC");
         endEventDateTime.setDateTime(new DateTime(event.getEnd()));
-        endEventDateTime.setTimeZone("Etc/UTC");
-        //endEventDateTime.setTimeZone("UTC");
+        endEventDateTime.setTimeZone("UTC");
         googleEvent.setSummary(event.getTitle());
         googleEvent.setDescription(event.getDescription());
         googleEvent.setStart(startEventDateTime);
@@ -193,6 +190,28 @@ public class GoogleCalendar extends BaseCalendar {
             e.printStackTrace();
         }
         return events;
+    }
+
+    public List<String> getEvents(Date start, Date end) {
+        List<String> eventIds = new ArrayList<>();
+
+        try {
+            CalendarList calendarList = calendar.calendarList().list().execute();
+            for (CalendarListEntry listEntry : calendarList.getItems()) {
+                List<Event> events = calendar.events().list(listEntry.getId())
+                        .setTimeMin(new DateTime(start))
+                        .setTimeMax(new DateTime(end))
+                        .execute()
+                        .getItems();
+                for (Event event : events) {
+                    eventIds.add(event.getId());
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return eventIds;
     }
 
     @Override

@@ -56,10 +56,10 @@ public class CalendarHandler extends DSLinkHandler {
                         } else if (typeAttribute.getString().equals("google")) {
                             String clientId = calendarNode.getRoConfig("clientId").getString();
                             String clientSecret = calendarNode.getRoConfig("clientSecret").getString();
-                            Node eventsNode = calendarNode.getChild("events");
                             GoogleCalendar cal = new GoogleCalendar(calendarNode, clientId, clientSecret);
                             calendars.put(calendarNode.getName(), cal);
                             cal.attemptAuthorize(calendarNode);
+                            Actions.addGetEventsRange(calendarNode);
                         }
                     }
 

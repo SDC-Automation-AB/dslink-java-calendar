@@ -23,6 +23,14 @@ public abstract class BaseCalendar {
     public abstract void deleteEvent(String uid, boolean destroyNode);
     public abstract List<DSAEvent> getEvents();
 
+    /**
+     * This filters for events by start and end time.
+     * @param start Start time
+     * @param end End time
+     * @return List of strings to unique ids.
+     */
+    public abstract List<String> getEvents(Date start, Date end);
+
     public void startUpdateLoop() {
         LoopProvider.getProvider().schedulePeriodic(new Runnable() {
             @Override
