@@ -192,26 +192,18 @@ public class GoogleCalendar extends BaseCalendar {
         return events;
     }
 
-    public List<String> getEvents(Date start, Date end) {
-        List<String> eventIds = new ArrayList<>();
+    public List<DSAEvent> getEvents(Date start, Date end) {
+        List<DSAEvent> events = getEvents();
+        List<DSAEvent> newEvents = new ArrayList<>();
 
-        try {
-            CalendarList calendarList = calendar.calendarList().list().execute();
-            for (CalendarListEntry listEntry : calendarList.getItems()) {
-                List<Event> events = calendar.events().list(listEntry.getId())
-                        .setTimeMin(new DateTime(start))
-                        .setTimeMax(new DateTime(end))
-                        .execute()
-                        .getItems();
-                for (Event event : events) {
-                    eventIds.add(event.getId());
-                }
+        for (DSAEvent event : events) {
+            if (event.getStart().getTime() >= start.getTime() &&
+                event.getEnd().getTime() <= end.getTime()) {
+                newEvents.add(event);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
-        return eventIds;
+        return newEvents;
     }
 
     @Override

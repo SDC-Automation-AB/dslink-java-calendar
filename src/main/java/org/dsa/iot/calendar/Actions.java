@@ -1,5 +1,6 @@
 package org.dsa.iot.calendar;
 
+import org.bouncycastle.jcajce.provider.symmetric.ARC4;
 import org.dsa.iot.calendar.abstractions.BaseCalendar;
 import org.dsa.iot.calendar.abstractions.DSAEvent;
 import org.dsa.iot.calendar.abstractions.DSAIdentifier;
@@ -346,16 +347,18 @@ public class Actions {
         public GetEvents(final BaseCalendar calendar) {
             super(Permission.READ, new Handler<ActionResult>() {
                 @Override
-                public void handle(ActionResult event) {
+                public void handle(ActionResult actionResult) {
                     try {
-                        String timeRange = event.getParameter("timeRange").getString();
+                        String timeRange = actionResult.getParameter("timeRange").getString();
                         String[] dates = timeRange.split("/", 2);
                         Date startDate = BaseCalendar.DATE_FORMAT.parse(dates[0]);
                         Date endDate = BaseCalendar.DATE_FORMAT.parse(dates[1]);
-                        List<String> events = calendar.getEvents(startDate, endDate);
-                        event.getTable().setMode(Table.Mode.APPEND);
-                        for (String s : events) {
-                            event.getTable().addRow(Row.make(new Value(s)));
+                        List<DSAEvent> events = calendar.getEvents(startDate, endDate);
+                        actionResult.getTable().setMode(Table.Mode.APPEND);
+                        for (DSAEvent event : events) {
+                            actionResult.getTable().addRow(Row.make(new Value(event.getUniqueId()), new Value(event.getTitle()), new Value(event.getDescription()),
+                                    new Value(BaseCalendar.DATE_FORMAT.format(event.getStart())), new Value(BaseCalendar.DATE_FORMAT.format(event.getEnd())),
+                                    new Value(event.getTimeZone()), new Value(event.getCalendar().getTitle()), new Value(event.getCalendar().getUid())));
                         }
                     } catch (ParseException e) {
                         e.printStackTrace();
@@ -367,6 +370,13 @@ public class Actions {
             addParameter(parameter);
 
             addResult(new Parameter("ID", ValueType.STRING));
+            addResult(new Parameter("Title", ValueType.STRING));
+            addResult(new Parameter("Description", ValueType.STRING));
+            addResult(new Parameter("Start", ValueType.STRING));
+            addResult(new Parameter("End", ValueType.STRING));
+            addResult(new Parameter("TimeZone", ValueType.STRING));
+            addResult(new Parameter("CalendarID", ValueType.STRING));
+            addResult(new Parameter("CalendarTitle", ValueType.STRING));
             setResultType(ResultType.TABLE);
         }
     }

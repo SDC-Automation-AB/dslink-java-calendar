@@ -29,7 +29,7 @@ public abstract class BaseCalendar {
      * @param end End time
      * @return List of strings to unique ids.
      */
-    public abstract List<String> getEvents(Date start, Date end);
+    public abstract List<DSAEvent> getEvents(Date start, Date end);
 
     public void startUpdateLoop() {
         LoopProvider.getProvider().schedulePeriodic(new Runnable() {
