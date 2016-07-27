@@ -1,7 +1,10 @@
 package org.dsa.iot.calendar;
 
+import microsoft.exchange.webservices.data.core.enumeration.misc.ExchangeVersion;
+
 import org.dsa.iot.calendar.abstractions.BaseCalendar;
 import org.dsa.iot.calendar.caldav.CalDAVCalendar;
+import org.dsa.iot.calendar.ews.ExchangeCalendar;
 import org.dsa.iot.calendar.google.GoogleCalendar;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkHandler;
@@ -37,6 +40,7 @@ public class CalendarHandler extends DSLinkHandler {
 
         Actions.addAddCalDavCalendarNode(superRoot);
         Actions.addAddGoogleCalendarNode(superRoot);
+        Actions.addAddExchangeCalendarNode(superRoot);
 
         for (Map.Entry<String, Node> entry : superRoot.getChildren().entrySet()) {
             try {
@@ -60,6 +64,21 @@ public class CalendarHandler extends DSLinkHandler {
                             GoogleCalendar cal = new GoogleCalendar(calendarNode, clientId, clientSecret);
                             calendars.put(calendarNode.getName(), cal);
                             cal.attemptAuthorize(calendarNode);
+                        } else if (typeAttribute.getString().equals("exchange")) {
+                        	String vers = getROConfigOrDefault(calendarNode, "version", new Value("2010 SP2")).getString();
+                        	ExchangeVersion version = Actions.parseExchangeVersion(vers);
+                        	String email = getROConfigOrDefault(calendarNode, "email", new Value("")).getString();
+                        	String pass = getPasswordOrDefault(calendarNode, "");
+                        	boolean autoDisc = getROConfigOrDefault(calendarNode, "autoDiscoverUrl", new Value(true)).getBool();
+                        	String url = getROConfigOrDefault(calendarNode, "url", new Value("")).getString();
+                        	ExchangeCalendar cal;
+                        	if (autoDisc) {
+                            	cal = new ExchangeCalendar(calendarNode, version, email, pass);
+                            } else {
+                            	cal = new ExchangeCalendar(calendarNode, version, email, pass, url);
+                            }
+                        	calendars.put(calendarNode.getName(), cal);
+                        	cal.init();
                         }
                     }
 
@@ -82,5 +101,23 @@ public class CalendarHandler extends DSLinkHandler {
                 e.printStackTrace();
             }
         }
+    }
+    
+    private static Value getROConfigOrDefault(Node n, String name, Value def) {
+    	Value val = n.getRoConfig(name);
+    	if (val == null) {
+    		n.setRoConfig(name, def);
+    		return def;
+    	}
+    	return val;
+    }
+    
+    private static String getPasswordOrDefault(Node n, String def) {
+    	char[] parr = n.getPassword();
+    	if (parr == null) {
+    		n.setPassword(def.toCharArray());
+    		return def;
+    	}
+    	return String.valueOf(parr);
     }
 }

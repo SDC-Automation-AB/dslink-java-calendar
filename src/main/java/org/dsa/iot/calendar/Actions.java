@@ -1,8 +1,11 @@
 package org.dsa.iot.calendar;
 
+import microsoft.exchange.webservices.data.core.enumeration.misc.ExchangeVersion;
+
 import org.dsa.iot.calendar.abstractions.BaseCalendar;
 import org.dsa.iot.calendar.abstractions.DSAEvent;
 import org.dsa.iot.calendar.caldav.CalDAVCalendar;
+import org.dsa.iot.calendar.ews.ExchangeCalendar;
 import org.dsa.iot.calendar.google.GoogleCalendar;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
@@ -36,6 +39,14 @@ public class Actions {
         builder.setDisplayName("Add Google Calendar");
         builder.setSerializable(false);
         builder.setAction(new AddGoogleCalendar(superRoot));
+        return builder.build();
+    }
+    
+    public static Node addAddExchangeCalendarNode(Node superRoot)  {
+    	NodeBuilder builder = superRoot.createChild("addExchangeCalendar");
+        builder.setDisplayName("Add Exchange Calendar");
+        builder.setSerializable(false);
+        builder.setAction(new AddExchangeCalendar(superRoot));
         return builder.build();
     }
 
@@ -184,6 +195,84 @@ public class Actions {
             addParameter(new Parameter("clientId", ValueType.STRING));
             addParameter(new Parameter("clientSecret", ValueType.STRING));
         }
+    }
+    
+    public static class AddExchangeCalendar extends Action {
+    	public AddExchangeCalendar(final Node superRoot) {
+    		super(Permission.CONFIG, new Handler<ActionResult>() {
+				@Override
+				public void handle(ActionResult event) {
+					String desc = "";
+                    String email = "";
+                    String password = "";
+                    boolean autoDiscover = true;
+                    String url = "";
+                    String vers = "2010 SP2";
+                    ExchangeVersion version = ExchangeVersion.Exchange2010_SP2;
+
+                    if (event.getParameter("desc") != null) {
+                        desc = event.getParameter("desc").getString();
+                    }
+                    if (event.getParameter("version") != null) {
+                        vers = event.getParameter("version").getString();
+                        version = parseExchangeVersion(vers);
+                    }
+                    if (event.getParameter("email") != null) {
+                        email = event.getParameter("email").getString();
+                    }
+                    if (event.getParameter("password") != null) {
+                        password = event.getParameter("password").getString();
+                    }
+                    if (event.getParameter("autoDiscoverUrl") != null) {
+                        autoDiscover = event.getParameter("host").getBool();
+                    }
+                    if (event.getParameter("url") != null) {
+                        url = event.getParameter("url").getString();
+                    }
+                    
+                    NodeBuilder calendarBuilder = superRoot.createChild(desc);
+                    calendarBuilder.setAttribute("type", new Value("exchange"));
+                    calendarBuilder.setRoConfig("version", new Value(vers));
+                    calendarBuilder.setRoConfig("email", new Value(email));
+                    calendarBuilder.setPassword(password.toCharArray());
+                    calendarBuilder.setRoConfig("autoDiscoverUrl", new Value(autoDiscover));
+                    calendarBuilder.setRoConfig("url", new Value(url));
+                    Node calendarNode = calendarBuilder.build();
+
+                    NodeBuilder eventsBuilder = calendarNode.createChild("events");
+                    eventsBuilder.setDisplayName("Events");
+                    eventsBuilder.build();
+                    
+                    ExchangeCalendar cal;
+                    if (autoDiscover) {
+                    	cal = new ExchangeCalendar(calendarNode, version, email, password);
+                    } else {
+                    	cal = new ExchangeCalendar(calendarNode, version, email, password, url);
+                    }
+                    
+                    calendars.put(desc, cal);
+
+                    Actions.addCreateEventNode(calendarNode);
+                    Actions.addRemoveCalendarNode(calendarNode);
+                    Actions.addRefreshCalendarNode(calendarNode);
+					
+                    cal.init();
+				}
+    		});
+    		addParameter(new Parameter("desc", ValueType.STRING));
+    		addParameter(new Parameter("version", ValueType.makeEnum("2007 SP1", "2010", "2010 SP1", "2010 SP2"), new Value("2010 SP2")));
+            addParameter(new Parameter("email", ValueType.STRING));
+            addParameter(new Parameter("password", ValueType.STRING).setEditorType(EditorType.PASSWORD));
+            addParameter(new Parameter("autoDiscoverUrl", ValueType.BOOL, new Value(true)));
+            addParameter(new Parameter("url", ValueType.STRING));
+    	}
+    }
+    
+    public static ExchangeVersion parseExchangeVersion(String str) {
+    	if (str.equals("2007 SP1")) return ExchangeVersion.Exchange2007_SP1;
+        else if (str.equals("2010")) return ExchangeVersion.Exchange2010;
+        else if (str.equals("2010 SP1")) return ExchangeVersion.Exchange2010_SP1;
+        else return ExchangeVersion.Exchange2010_SP2;
     }
 
     private static class RemoveAccount extends Action {
