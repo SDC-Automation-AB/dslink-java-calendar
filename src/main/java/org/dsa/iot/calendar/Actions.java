@@ -90,6 +90,14 @@ public class Actions {
         return getEventsRange.build();
     }
 
+    public static Node addGetCalendars(Node calendarNode) {
+        NodeBuilder getCalendars = calendarNode.createChild("getCalendars");
+        getCalendars.setDisplayName("Get Calendars");
+        getCalendars.setSerializable(false);
+        getCalendars.setAction(new GetCalendars(calendars.get(calendarNode.getName())));
+        return getCalendars.build();
+    }
+
     private static class AddCalDAVCalendar extends Action {
         public AddCalDAVCalendar(final Node superRoot) {
             super(Permission.CONFIG, new Handler<ActionResult>() {
@@ -186,6 +194,7 @@ public class Actions {
                         Actions.addRemoveCalendarNode(calendarNode);
                         Actions.addRefreshCalendarNode(calendarNode);
                         Actions.addGetEventsRange(calendarNode);
+                        Actions.addGetCalendars(calendarNode);
                         cal.attemptAuthorize(calendarNode);
                     } catch (GeneralSecurityException | IOException e) {
                         e.printStackTrace();
@@ -358,7 +367,8 @@ public class Actions {
                         for (DSAEvent event : events) {
                             actionResult.getTable().addRow(Row.make(new Value(event.getUniqueId()), new Value(event.getTitle()), new Value(event.getDescription()),
                                     new Value(BaseCalendar.DATE_FORMAT.format(event.getStart())), new Value(BaseCalendar.DATE_FORMAT.format(event.getEnd())),
-                                    new Value(event.getTimeZone()), new Value(event.getCalendar().getTitle()), new Value(event.getCalendar().getUid())));
+                                    new Value(event.getTimeZone()), new Value(event.getCalendar().getTitle()), new Value(event.getCalendar().getUid()),
+                                    new Value(event.getLocation())));
                         }
                     } catch (ParseException e) {
                         e.printStackTrace();
@@ -377,6 +387,25 @@ public class Actions {
             addResult(new Parameter("TimeZone", ValueType.STRING));
             addResult(new Parameter("CalendarID", ValueType.STRING));
             addResult(new Parameter("CalendarTitle", ValueType.STRING));
+            addResult(new Parameter("Location", ValueType.STRING));
+            setResultType(ResultType.TABLE);
+        }
+    }
+
+    private static class GetCalendars extends Action {
+        public GetCalendars(final BaseCalendar calendar) {
+            super(Permission.READ, new Handler<ActionResult>() {
+                @Override
+                public void handle(ActionResult event) {
+                    List<DSAIdentifier> calendars = calendar.getCalendars();
+                    event.getTable().setMode(Table.Mode.APPEND);
+                    for (DSAIdentifier cal : calendars) {
+                        event.getTable().addRow(Row.make(new Value(cal.getUid()), new Value(cal.getTitle())));
+                    }
+                }
+            });
+            addResult(new Parameter("ID", ValueType.STRING));
+            addResult(new Parameter("Title", ValueType.STRING));
             setResultType(ResultType.TABLE);
         }
     }

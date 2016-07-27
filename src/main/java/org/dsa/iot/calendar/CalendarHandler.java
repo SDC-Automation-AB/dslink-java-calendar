@@ -17,7 +17,6 @@ import java.util.Map;
 public class CalendarHandler extends DSLinkHandler {
     private final HttpClient httpClient;
     public static final Map<String, BaseCalendar> calendars = new HashMap<>();
-    public static Node googleAccessToken;
 
     public CalendarHandler() {
         httpClient = new HttpClient();
@@ -60,6 +59,7 @@ public class CalendarHandler extends DSLinkHandler {
                             calendars.put(calendarNode.getName(), cal);
                             cal.attemptAuthorize(calendarNode);
                             Actions.addGetEventsRange(calendarNode);
+                            Actions.addGetCalendars(calendarNode);
                         }
                     }
 
