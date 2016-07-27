@@ -137,7 +137,9 @@ public class GoogleCalendar extends BaseCalendar {
         googleEvent.setEnd(endEventDateTime);
         googleEvent.setLocation(event.getLocation());
         try {
-            calendar.events().insert(event.getCalendar().getUid(), googleEvent).execute();
+            Event submittedEvent = calendar.events().insert(event.getCalendar().getUid(), googleEvent).execute();
+            event.setUniqueId(submittedEvent.getId());
+            createEventNode(event);
         } catch (IOException e) {
             e.printStackTrace();
         }

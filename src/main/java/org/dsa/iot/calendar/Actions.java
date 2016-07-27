@@ -261,7 +261,6 @@ public class Actions {
                                 event.setCalendar(new DSAIdentifier(calUid, calTitle));
                             }
                             calendar.createEvent(event);
-                            calendar.updateCalendar();
                             actionResult.getTable().addRow(Row.make(new Value(true)));
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -345,8 +344,7 @@ public class Actions {
             super(Permission.WRITE, new Handler<ActionResult>() {
                 @Override
                 public void handle(ActionResult event) {
-                    calendar.deleteEvent(uid, false);
-                    calendar.updateCalendar();
+                    calendar.deleteEvent(uid, true);
                 }
             });
         }
