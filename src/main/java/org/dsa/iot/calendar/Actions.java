@@ -224,7 +224,7 @@ public class Actions {
                         password = event.getParameter("password").getString();
                     }
                     if (event.getParameter("autoDiscoverUrl") != null) {
-                        autoDiscover = event.getParameter("host").getBool();
+                        autoDiscover = event.getParameter("autoDiscoverUrl").getBool();
                     }
                     if (event.getParameter("url") != null) {
                         url = event.getParameter("url").getString();
