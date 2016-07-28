@@ -1,6 +1,5 @@
 package org.dsa.iot.calendar;
 
-import org.bouncycastle.jcajce.provider.symmetric.ARC4;
 import org.dsa.iot.calendar.abstractions.BaseCalendar;
 import org.dsa.iot.calendar.abstractions.DSAEvent;
 import org.dsa.iot.calendar.abstractions.DSAIdentifier;

@@ -102,11 +102,7 @@ public class GoogleCalendar extends BaseCalendar {
         if (newCredential != null &&
                 (newCredential.getRefreshToken() != null || newCredential.getExpiresInSeconds() > 60)) {
             credential = newCredential;
-            calendar = new Calendar.Builder(httpTransport,
-                    jsonGenerator,
-                    credential)
-                    .setApplicationName("dslink-java-calendar")
-                    .build();
+            createCalendarConnection();
             startUpdateLoop();
         }
     }
@@ -114,12 +110,16 @@ public class GoogleCalendar extends BaseCalendar {
     private void authorize(AuthorizationCodeFlow flow, String code) throws IOException {
         TokenResponse response = flow.newTokenRequest(code).setRedirectUri(GoogleOAuthConstants.OOB_REDIRECT_URI).execute();
         credential = flow.createAndStoreCredential(response, userId);
+        createCalendarConnection();
+        startUpdateLoop();
+    }
+
+    private void createCalendarConnection() {
         calendar = new Calendar.Builder(httpTransport,
                 jsonGenerator,
                 credential)
                 .setApplicationName("dslink-java-calendar")
                 .build();
-        startUpdateLoop();
     }
 
     @Override
