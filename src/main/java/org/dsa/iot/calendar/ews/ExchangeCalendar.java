@@ -158,7 +158,7 @@ public class ExchangeCalendar extends BaseCalendar {
 		List<DSAEvent> events = new ArrayList<DSAEvent>();
 		FindItemsResults<Appointment> results = null;
 		try {
-			results = service.findAppointments(WellKnownFolderName.Root, new CalendarView(new Date(0), new Date(Long.MAX_VALUE)));
+			results = service.findAppointments(WellKnownFolderName.Calendar, new CalendarView(new Date(), new Date(System.currentTimeMillis() + 31556952000l)));
 		} catch (Exception e) {
 			LOGGER.debug("", e);
 		}
@@ -168,7 +168,11 @@ public class ExchangeCalendar extends BaseCalendar {
 		for (Appointment appt: results) {
 			try {
 				DSAEvent event = new DSAEvent(appt.getSubject());
-				event.setDescription(appt.getBody().toString());
+				try {
+					event.setDescription(appt.getBody().toString());
+				} catch (ServiceLocalException e) {
+					event.setDescription("");
+				}
 				event.setStart(appt.getStart());
 				event.setEnd(appt.getEnd());
 				event.setTimeZone("UTC");
