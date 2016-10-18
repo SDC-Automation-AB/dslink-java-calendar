@@ -28,7 +28,10 @@ import java.util.List;
 import static org.dsa.iot.calendar.CalendarHandler.CALENDARS;
 
 public class Actions {
-    public static Node addAddCalDavCalendarNode(Node superRoot) {
+    private Actions() {
+    }
+
+    static Node addAddCalDavCalendarNode(Node superRoot) {
         NodeBuilder builder = superRoot.createChild("addCalDavCalendar");
         builder.setDisplayName("Add CalDAV Calendar");
         builder.setSerializable(false);
@@ -36,7 +39,7 @@ public class Actions {
         return builder.build();
     }
 
-    public static Node addAddGoogleCalendarNode(Node superRoot) {
+    static Node addAddGoogleCalendarNode(Node superRoot) {
         NodeBuilder builder = superRoot.createChild("addGoogleCalendar");
         builder.setDisplayName("Add Google Calendar");
         builder.setSerializable(false);
@@ -44,7 +47,7 @@ public class Actions {
         return builder.build();
     }
 
-    public static Node addAddExchangeCalendarNode(Node superRoot) {
+    static Node addAddExchangeCalendarNode(Node superRoot) {
         NodeBuilder builder = superRoot.createChild("addExchangeCalendar");
         builder.setDisplayName("Add Exchange Calendar");
         builder.setSerializable(false);
@@ -52,7 +55,7 @@ public class Actions {
         return builder.build();
     }
 
-    public static Node addRemoveCalendarNode(Node calendarNode) {
+    static Node addRemoveCalendarNode(Node calendarNode) {
         NodeBuilder rmBuilder = calendarNode.createChild("removeAccount");
         rmBuilder.setDisplayName("Remove Account");
         rmBuilder.setSerializable(false);
@@ -60,7 +63,7 @@ public class Actions {
         return rmBuilder.build();
     }
 
-    public static Node addRefreshCalendarNode(Node calendarNode) {
+    static Node addRefreshCalendarNode(Node calendarNode) {
         NodeBuilder refreshBuilder = calendarNode.createChild("refreshCalendar");
         refreshBuilder.setDisplayName("Refresh Calendar");
         refreshBuilder.setSerializable(false);
@@ -68,7 +71,7 @@ public class Actions {
         return refreshBuilder.build();
     }
 
-    public static Node addCreateEventNode(Node calendarNode) {
+    static Node addCreateEventNode(Node calendarNode) {
         NodeBuilder createEventNode = calendarNode.createChild("createAnEvent");
         createEventNode.setDisplayName("Create Event");
         createEventNode.setSerializable(false);
@@ -92,7 +95,7 @@ public class Actions {
         return deleteEventNode.build();
     }
 
-    public static Node addGetEventsRange(Node calendarNode) {
+    static Node addGetEventsRange(Node calendarNode) {
         NodeBuilder getEventsRange = calendarNode.createChild("getEventsRange");
         getEventsRange.setDisplayName("Get Events Range");
         getEventsRange.setSerializable(false);
@@ -100,7 +103,7 @@ public class Actions {
         return getEventsRange.build();
     }
 
-    public static Node addGetCalendars(Node calendarNode) {
+    static Node addGetCalendars(Node calendarNode) {
         NodeBuilder getCalendars = calendarNode.createChild("getCalendars");
         getCalendars.setDisplayName("Get Calendars");
         getCalendars.setSerializable(false);
@@ -109,10 +112,9 @@ public class Actions {
     }
 
     private static class AddCalDAVCalendar extends Action {
+        static final int DEFAULT_PORT = 80;
 
-        public static final int DEFAULT_PORT = 80;
-
-        public AddCalDAVCalendar(final Node superRoot) {
+        AddCalDAVCalendar(final Node superRoot) {
             super(Permission.CONFIG, new Handler<ActionResult>() {
                 @Override
                 public void handle(ActionResult event) {
@@ -172,7 +174,7 @@ public class Actions {
     }
 
     private static class AddGoogleCalendar extends Action {
-        public AddGoogleCalendar(final Node superRoot) {
+        AddGoogleCalendar(final Node superRoot) {
             super(Permission.CONFIG, new Handler<ActionResult>() {
                 @Override
                 public void handle(ActionResult event) {
@@ -197,7 +199,7 @@ public class Actions {
 
                     NodeBuilder eventsBuilder = calendarNode.createChild("events");
                     eventsBuilder.setDisplayName("Events");
-                    Node events = eventsBuilder.build();
+                    eventsBuilder.build();
 
                     try {
                         GoogleCalendar cal = new GoogleCalendar(calendarNode, clientId, clientSecret);
@@ -221,7 +223,7 @@ public class Actions {
     }
 
     public static class AddExchangeCalendar extends Action {
-        public AddExchangeCalendar(final Node superRoot) {
+        AddExchangeCalendar(final Node superRoot) {
             super(Permission.CONFIG, new Handler<ActionResult>() {
                 @Override
                 public void handle(ActionResult event) {
@@ -279,7 +281,7 @@ public class Actions {
                     Actions.addRemoveCalendarNode(calendarNode);
                     Actions.addRefreshCalendarNode(calendarNode);
 
-                    cal.init();
+                    cal.startUpdateLoop();
                 }
             });
             addParameter(new Parameter("desc", ValueType.STRING));
@@ -305,7 +307,7 @@ public class Actions {
     }
 
     private static class RemoveAccount extends Action {
-        public RemoveAccount() {
+        RemoveAccount() {
             super(Permission.CONFIG, new Handler<ActionResult>() {
                 @Override
                 public void handle(ActionResult event) {
@@ -317,7 +319,7 @@ public class Actions {
     }
 
     private static class RefreshBuilder extends Action {
-        public RefreshBuilder(final BaseCalendar calendar) {
+        RefreshBuilder(final BaseCalendar calendar) {
             super(Permission.WRITE, new Handler<ActionResult>() {
                 @Override
                 public void handle(ActionResult event) {
@@ -328,7 +330,7 @@ public class Actions {
     }
 
     private static class CreateEvent extends Action {
-        public CreateEvent(final BaseCalendar calendar) {
+        CreateEvent(final BaseCalendar calendar) {
             super(Permission.WRITE, new Handler<ActionResult>() {
                 @Override
                 public void handle(ActionResult actionResult) {
@@ -385,7 +387,7 @@ public class Actions {
     }
 
     private static class EditEvent extends Action {
-        public EditEvent(final BaseCalendar calendar) {
+        EditEvent(final BaseCalendar calendar) {
             super(Permission.WRITE, new Handler<ActionResult>() {
                 @Override
                 public void handle(ActionResult actionResult) {
@@ -439,7 +441,7 @@ public class Actions {
     }
 
     private static class RemoveEvent extends Action {
-        public RemoveEvent(final BaseCalendar calendar, final String uid) {
+        RemoveEvent(final BaseCalendar calendar, final String uid) {
             super(Permission.WRITE, new Handler<ActionResult>() {
                 @Override
                 public void handle(ActionResult event) {
@@ -450,7 +452,7 @@ public class Actions {
     }
 
     private static class GetEvents extends Action {
-        public GetEvents(final BaseCalendar calendar) {
+        GetEvents(final BaseCalendar calendar) {
             super(Permission.READ, new Handler<ActionResult>() {
                 @Override
                 public void handle(ActionResult actionResult) {
@@ -498,7 +500,7 @@ public class Actions {
     }
 
     private static class GetCalendars extends Action {
-        public GetCalendars(final BaseCalendar calendar) {
+        GetCalendars(final BaseCalendar calendar) {
             super(Permission.READ, new Handler<ActionResult>() {
                 @Override
                 public void handle(ActionResult event) {
