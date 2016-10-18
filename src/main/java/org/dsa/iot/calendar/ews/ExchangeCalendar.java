@@ -157,7 +157,7 @@ public class ExchangeCalendar extends BaseCalendar {
 
     @Override
     public List<DSAEvent> getEvents() {
-        List<DSAEvent> events = new ArrayList<DSAEvent>();
+        List<DSAEvent> events = new ArrayList<>();
         FindItemsResults<Appointment> results = null;
         try {
             Date now = new Date();
