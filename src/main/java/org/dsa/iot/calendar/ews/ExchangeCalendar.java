@@ -58,18 +58,16 @@ public class ExchangeCalendar extends BaseCalendar {
         this.password = password;
         this.version = exchangeVersion;
         this.autoDiscover = true;
+
+        setupService();
     }
 
     public ExchangeCalendar(Node calendarNode, ExchangeVersion exchangeVersion, String email, String password, String url) {
         this(calendarNode, exchangeVersion, email, password);
         this.url = url;
         this.autoDiscover = false;
-    }
 
-    public void init() {
         setupService();
-
-        startUpdateLoop();
     }
 
     private void setupService() {
@@ -116,6 +114,7 @@ public class ExchangeCalendar extends BaseCalendar {
                 LOGGER.debug("Silented exception:", e);
             }
         }
+
         makeEditAction();
     }
 
@@ -256,5 +255,4 @@ public class ExchangeCalendar extends BaseCalendar {
 
         setupService();
     }
-
 }

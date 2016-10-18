@@ -65,16 +65,13 @@ public class CalendarHandler extends DSLinkHandler {
                                 String pass = getPasswordOrDefault(calendarNode, "");
                                 boolean autoDisc = getROConfigOrDefault(calendarNode, "autoDiscoverUrl", new Value(true)).getBool();
                                 String url = getROConfigOrDefault(calendarNode, "url", new Value("")).getString();
-                                ExchangeCalendar cal;
                                 if (autoDisc) {
                                     cal = new ExchangeCalendar(calendarNode, version, email, pass);
                                 } else {
                                     cal = new ExchangeCalendar(calendarNode, version, email, pass, url);
                                 }
                                 CALENDARS.put(calendarNode.getName(), cal);
-                                // TODO This method should probably be declared on base class.
-                                // This currently prevents the code from compiling
-                                cal.init();
+                                cal.startUpdateLoop();
                             default:
                                 throw new Exception("Unknown calendar type");
                         }
