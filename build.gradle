@@ -33,6 +33,13 @@ dependencies {
     // Google Calendar support
     compile 'com.google.api-client:google-api-client-java6:1.22.0'
     compile 'com.google.apis:google-api-services-calendar:v3-rev202-1.22.0'
+    compile 'com.arcbees:checkstyle:1.2'
+}
+
+apply plugin: 'checkstyle'
+checkstyle {
+    configFile = file("${project.rootDir}/checkstyle/checkstyle.xml")
+    toolVersion = '6.17'
 }
 
 tasks.withType(FindBugs) {
