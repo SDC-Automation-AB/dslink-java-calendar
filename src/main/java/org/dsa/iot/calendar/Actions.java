@@ -43,9 +43,9 @@ public class Actions {
         builder.setAction(new AddGoogleCalendar(superRoot));
         return builder.build();
     }
-    
-    public static Node addAddExchangeCalendarNode(Node superRoot)  {
-    	NodeBuilder builder = superRoot.createChild("addExchangeCalendar");
+
+    public static Node addAddExchangeCalendarNode(Node superRoot) {
+        NodeBuilder builder = superRoot.createChild("addExchangeCalendar");
         builder.setDisplayName("Add Exchange Calendar");
         builder.setSerializable(false);
         builder.setAction(new AddExchangeCalendar(superRoot));
@@ -109,6 +109,9 @@ public class Actions {
     }
 
     private static class AddCalDAVCalendar extends Action {
+
+        public static final int DEFAULT_PORT = 80;
+
         public AddCalDAVCalendar(final Node superRoot) {
             super(Permission.CONFIG, new Handler<ActionResult>() {
                 @Override
@@ -117,7 +120,7 @@ public class Actions {
                     String username = "";
                     String password = "";
                     String host = "";
-                    int port = 80;
+                    int port = DEFAULT_PORT;
                     String path = "";
                     if (event.getParameter("desc") != null) {
                         desc = event.getParameter("desc").getString();
@@ -216,13 +219,13 @@ public class Actions {
             addParameter(new Parameter("clientSecret", ValueType.STRING));
         }
     }
-    
+
     public static class AddExchangeCalendar extends Action {
-    	public AddExchangeCalendar(final Node superRoot) {
-    		super(Permission.CONFIG, new Handler<ActionResult>() {
-				@Override
-				public void handle(ActionResult event) {
-					String desc = "";
+        public AddExchangeCalendar(final Node superRoot) {
+            super(Permission.CONFIG, new Handler<ActionResult>() {
+                @Override
+                public void handle(ActionResult event) {
+                    String desc = "";
                     String email = "";
                     String password = "";
                     boolean autoDiscover = true;
@@ -249,7 +252,7 @@ public class Actions {
                     if (event.getParameter("url") != null) {
                         url = event.getParameter("url").getString();
                     }
-                    
+
                     NodeBuilder calendarBuilder = superRoot.createChild(desc);
                     calendarBuilder.setAttribute("type", new Value("exchange"));
                     calendarBuilder.setRoConfig("version", new Value(vers));
@@ -262,37 +265,43 @@ public class Actions {
                     NodeBuilder eventsBuilder = calendarNode.createChild("events");
                     eventsBuilder.setDisplayName("Events");
                     eventsBuilder.build();
-                    
+
                     ExchangeCalendar cal;
                     if (autoDiscover) {
-                    	cal = new ExchangeCalendar(calendarNode, version, email, password);
+                        cal = new ExchangeCalendar(calendarNode, version, email, password);
                     } else {
-                    	cal = new ExchangeCalendar(calendarNode, version, email, password, url);
+                        cal = new ExchangeCalendar(calendarNode, version, email, password, url);
                     }
-                    
+
                     calendars.put(desc, cal);
 
                     Actions.addCreateEventNode(calendarNode);
                     Actions.addRemoveCalendarNode(calendarNode);
                     Actions.addRefreshCalendarNode(calendarNode);
-					
+
                     cal.init();
-				}
-    		});
-    		addParameter(new Parameter("desc", ValueType.STRING));
-    		addParameter(new Parameter("version", ValueType.makeEnum("2007 SP1", "2010", "2010 SP1", "2010 SP2"), new Value("2010 SP2")));
+                }
+            });
+            addParameter(new Parameter("desc", ValueType.STRING));
+            addParameter(new Parameter("version", ValueType.makeEnum("2007 SP1", "2010", "2010 SP1", "2010 SP2"), new Value("2010 SP2")));
             addParameter(new Parameter("email", ValueType.STRING));
             addParameter(new Parameter("password", ValueType.STRING).setEditorType(EditorType.PASSWORD));
             addParameter(new Parameter("autoDiscoverUrl", ValueType.BOOL, new Value(true)));
             addParameter(new Parameter("url", ValueType.STRING));
-    	}
+        }
     }
-    
+
     public static ExchangeVersion parseExchangeVersion(String str) {
-    	if (str.equals("2007 SP1")) return ExchangeVersion.Exchange2007_SP1;
-        else if (str.equals("2010")) return ExchangeVersion.Exchange2010;
-        else if (str.equals("2010 SP1")) return ExchangeVersion.Exchange2010_SP1;
-        else return ExchangeVersion.Exchange2010_SP2;
+        switch (str) {
+            case "2007 SP1":
+                return ExchangeVersion.Exchange2007_SP1;
+            case "2010":
+                return ExchangeVersion.Exchange2010;
+            case "2010 SP1":
+                return ExchangeVersion.Exchange2010_SP1;
+            default:
+                return ExchangeVersion.Exchange2010_SP2;
+        }
     }
 
     private static class RemoveAccount extends Action {
@@ -397,16 +406,18 @@ public class Actions {
                             event.setStart(startDate);
                             event.setEnd(endDate);
                             event.setLocation(location);
-                            actionResult.getNode().getParent().setDisplayName(title);
-                            actionResult.getNode().getParent().getChild("description").setValue(new Value(desc));
-                            actionResult.getNode().getParent().getChild("start").setValue(new Value(dates[0]));
-                            actionResult.getNode().getParent().getChild("end").setValue(new Value(dates[1]));
-                            actionResult.getNode().getParent().getChild("location").setValue(new Value(location));
+                            Node editEventNode = actionResult.getNode().getParent();
+                            editEventNode.setDisplayName(title);
+                            editEventNode.getChild("description").setValue(new Value(desc));
+                            editEventNode.getChild("start").setValue(new Value(dates[0]));
+                            editEventNode.getChild("end").setValue(new Value(dates[1]));
+                            editEventNode.getChild("location").setValue(new Value(location));
                             if (calendar.supportsMultipleCalendars()) {
-                                event.setCalendar(new DSAIdentifier(actionResult.getNode().getParent().getChild("calendarId").getValue().getString(),
-                                        actionResult.getNode().getParent().getChild("calendar").getValue().getString()));
+                                String calendarId = editEventNode.getChild("calendarId").getValue().getString();
+                                event.setCalendar(new DSAIdentifier(calendarId,
+                                        editEventNode.getChild("calendar").getValue().getString()));
                             }
-                            calendar.deleteEvent(actionResult.getNode().getParent().getName(), false);
+                            calendar.deleteEvent(editEventNode.getName(), false);
                             calendar.createEvent(event);
                             actionResult.getTable().addRow(Row.make(new Value(true)));
                         } catch (Exception e) {
@@ -451,10 +462,18 @@ public class Actions {
                         List<DSAEvent> events = calendar.getEvents(startDate, endDate);
                         actionResult.getTable().setMode(Table.Mode.APPEND);
                         for (DSAEvent event : events) {
-                            actionResult.getTable().addRow(Row.make(new Value(event.getUniqueId()), new Value(event.getTitle()), new Value(event.getDescription()),
-                                    new Value(BaseCalendar.DATE_FORMAT.format(event.getStart())), new Value(BaseCalendar.DATE_FORMAT.format(event.getEnd())),
-                                    new Value(event.getTimeZone()), new Value(event.getCalendar().getTitle()), new Value(event.getCalendar().getUid()),
-                                    new Value(event.getLocation())));
+                            actionResult
+                                    .getTable()
+                                    .addRow(Row.make(
+                                            new Value(event.getUniqueId()),
+                                            new Value(event.getTitle()),
+                                            new Value(event.getDescription()),
+                                            new Value(BaseCalendar.DATE_FORMAT.format(event.getStart())),
+                                            new Value(BaseCalendar.DATE_FORMAT.format(event.getEnd())),
+                                            new Value(event.getTimeZone()),
+                                            new Value(event.getCalendar().getTitle()),
+                                            new Value(event.getCalendar().getUid()),
+                                            new Value(event.getLocation())));
                         }
                     } catch (ParseException e) {
                         e.printStackTrace();

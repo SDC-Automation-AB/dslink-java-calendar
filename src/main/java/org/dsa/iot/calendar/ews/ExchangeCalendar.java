@@ -67,7 +67,6 @@ public class ExchangeCalendar extends BaseCalendar {
     }
 
     public void init() {
-
         setupService();
 
         startUpdateLoop();
@@ -114,7 +113,7 @@ public class ExchangeCalendar extends BaseCalendar {
                     LOGGER.error("URL Autodiscovery Failed");
                 }
             } catch (Exception e) {
-                LOGGER.debug("", e);
+                LOGGER.debug("Silented exception:", e);
             }
         }
         makeEditAction();
