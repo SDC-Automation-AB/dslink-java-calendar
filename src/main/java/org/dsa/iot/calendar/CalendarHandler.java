@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CalendarHandler extends DSLinkHandler {
-    public static final Map<String, BaseCalendar> calendars = new HashMap<>();
+    static final Map<String, BaseCalendar> CALENDARS = new HashMap<>();
 
     @Override
     public boolean isResponder() {
@@ -39,7 +39,7 @@ public class CalendarHandler extends DSLinkHandler {
                     Node calendarNode = entry.getValue();
 
                     // Set up calendar
-                    if (!calendars.containsKey(calendarNode.getName())) {
+                    if (!CALENDARS.containsKey(calendarNode.getName())) {
                         BaseCalendar cal;
                         switch (typeAttribute.getString()) {
                             case "caldav":
@@ -53,7 +53,7 @@ public class CalendarHandler extends DSLinkHandler {
                                 String clientId = calendarNode.getRoConfig("clientId").getString();
                                 String clientSecret = calendarNode.getRoConfig("clientSecret").getString();
                                 cal = new GoogleCalendar(calendarNode, clientId, clientSecret);
-                                calendars.put(calendarNode.getName(), cal);
+                                CALENDARS.put(calendarNode.getName(), cal);
                                 ((GoogleCalendar) cal).attemptAuthorize(calendarNode);
                                 Actions.addGetEventsRange(calendarNode);
                                 Actions.addGetCalendars(calendarNode);
@@ -71,13 +71,13 @@ public class CalendarHandler extends DSLinkHandler {
                                 } else {
                                     cal = new ExchangeCalendar(calendarNode, version, email, pass, url);
                                 }
-                                calendars.put(calendarNode.getName(), cal);
+                                CALENDARS.put(calendarNode.getName(), cal);
                                 // TODO This method should probably be declared on base class.
                                 cal.init();
                             default:
                                 throw new Exception("Unknown calendar type");
                         }
-                        calendars.put(calendarNode.getName(), cal);
+                        CALENDARS.put(calendarNode.getName(), cal);
                     }
 
                     Actions.addRemoveCalendarNode(calendarNode);
