@@ -2,6 +2,9 @@ package org.dsa.iot.calendar.caldav;
 
 import com.fasterxml.uuid.Generators;
 import net.fortuna.ical4j.model.*;
+import net.fortuna.ical4j.model.Calendar;
+import net.fortuna.ical4j.model.Date;
+import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VTimeZone;
 import net.fortuna.ical4j.model.property.Description;
@@ -18,8 +21,7 @@ import org.osaf.caldav4j.methods.HttpClient;
 import org.osaf.caldav4j.model.request.CalendarQuery;
 import org.osaf.caldav4j.util.GenerateQuery;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class CalDAVCalendar extends BaseCalendar {
     private final HttpClient httpClient;
@@ -85,16 +87,12 @@ public class CalDAVCalendar extends BaseCalendar {
                 }
                 ComponentList componentList = calendar.getComponents().getComponents(Component.VEVENT);
                 for (VEvent vEvent : (Iterable<VEvent>) componentList) {
-                    if (vEvent.getUid() == null && vEvent.getSummary() == null) {
+                    if (vEvent.getUid() == null || vEvent.getSummary() == null) {
                         continue;
                     }
                     DSAEvent event = new DSAEvent(
                         vEvent.getSummary().getValue()
                     );
-                    if (vEvent.getUid() == null) {
-                        // TODO: Log error
-                        continue;
-                    }
                     event.setUniqueId(vEvent.getUid().getValue());
                     if (vEvent.getDescription() != null) {
                         event.setDescription(vEvent.getDescription().getValue());
@@ -105,6 +103,9 @@ public class CalDAVCalendar extends BaseCalendar {
                     if (vEvent.getEndDate() != null) {
                         event.setEnd(vEvent.getEndDate().getDate());
                     }
+                    if (vEvent.getLocation() != null) {
+                        event.setLocation(vEvent.getLocation().getValue());
+                    }
                     event.setTimeZone(timeZone);
                     events.add(event);
                 }
@@ -114,5 +115,10 @@ public class CalDAVCalendar extends BaseCalendar {
         }
 
         return events;
+    }
+
+    @Override
+    public List<DSAEvent> getEvents(java.util.Date start, java.util.Date end) {
+        return new ArrayList<>();
     }
 }
