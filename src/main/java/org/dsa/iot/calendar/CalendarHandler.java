@@ -73,6 +73,7 @@ public class CalendarHandler extends DSLinkHandler {
                                 }
                                 CALENDARS.put(calendarNode.getName(), cal);
                                 // TODO This method should probably be declared on base class.
+                                // This currently prevents the code from compiling
                                 cal.init();
                             default:
                                 throw new Exception("Unknown calendar type");
