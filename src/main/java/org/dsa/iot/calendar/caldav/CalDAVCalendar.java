@@ -33,7 +33,7 @@ public class CalDAVCalendar extends BaseCalendar {
         httpClient.getHostConfiguration().setHost(host, port, "http");
         caldavCollection = new CalDAVCollection(
                 path,
-                (HostConfiguration)httpClient.getHostConfiguration().clone(),
+                (HostConfiguration) httpClient.getHostConfiguration().clone(),
                 new CalDAV4JMethodFactory(),
                 CalDAVConstants.PROC_ID_DEFAULT
         );
@@ -64,7 +64,8 @@ public class CalDAVCalendar extends BaseCalendar {
         try {
             // This throws an exception, but actually works.
             caldavCollection.delete(httpClient, Component.VEVENT, uid);
-        } catch (CalDAV4JException ignored) {}
+        } catch (CalDAV4JException ignored) {
+        }
         if (destroyNode) {
             eventsNode.removeChild(uid);
         }
@@ -91,7 +92,7 @@ public class CalDAVCalendar extends BaseCalendar {
                         continue;
                     }
                     DSAEvent event = new DSAEvent(
-                        vEvent.getSummary().getValue()
+                            vEvent.getSummary().getValue()
                     );
                     event.setUniqueId(vEvent.getUid().getValue());
                     if (vEvent.getDescription() != null) {

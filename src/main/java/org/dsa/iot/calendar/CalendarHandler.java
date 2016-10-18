@@ -1,7 +1,10 @@
 package org.dsa.iot.calendar;
 
+import microsoft.exchange.webservices.data.core.enumeration.misc.ExchangeVersion;
+
 import org.dsa.iot.calendar.abstractions.BaseCalendar;
 import org.dsa.iot.calendar.caldav.CalDAVCalendar;
+import org.dsa.iot.calendar.ews.ExchangeCalendar;
 import org.dsa.iot.calendar.google.GoogleCalendar;
 import org.dsa.iot.dslink.DSLink;
 import org.dsa.iot.dslink.DSLinkHandler;
@@ -12,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CalendarHandler extends DSLinkHandler {
-    public static final Map<String, BaseCalendar> calendars = new HashMap<>();
+    static final Map<String, BaseCalendar> CALENDARS = new HashMap<>();
 
     @Override
     public boolean isResponder() {
@@ -27,6 +30,7 @@ public class CalendarHandler extends DSLinkHandler {
 
         Actions.addAddCalDavCalendarNode(superRoot);
         Actions.addAddGoogleCalendarNode(superRoot);
+        Actions.addAddExchangeCalendarNode(superRoot);
 
         for (Map.Entry<String, Node> entry : superRoot.getChildren().entrySet()) {
             try {
@@ -35,7 +39,7 @@ public class CalendarHandler extends DSLinkHandler {
                     Node calendarNode = entry.getValue();
 
                     // Set up calendar
-                    if (!calendars.containsKey(calendarNode.getName())) {
+                    if (!CALENDARS.containsKey(calendarNode.getName())) {
                         BaseCalendar cal;
                         switch (typeAttribute.getString()) {
                             case "caldav":
@@ -49,25 +53,57 @@ public class CalendarHandler extends DSLinkHandler {
                                 String clientId = calendarNode.getRoConfig("clientId").getString();
                                 String clientSecret = calendarNode.getRoConfig("clientSecret").getString();
                                 cal = new GoogleCalendar(calendarNode, clientId, clientSecret);
-                                calendars.put(calendarNode.getName(), cal);
-                                ((GoogleCalendar)cal).attemptAuthorize(calendarNode);
+                                CALENDARS.put(calendarNode.getName(), cal);
+                                ((GoogleCalendar) cal).attemptAuthorize(calendarNode);
                                 Actions.addGetEventsRange(calendarNode);
                                 Actions.addGetCalendars(calendarNode);
                                 break;
+                            case "exchange":
+                                String vers = getROConfigOrDefault(calendarNode, "version", new Value("2010 SP2")).getString();
+                                ExchangeVersion version = Actions.parseExchangeVersion(vers);
+                                String email = getROConfigOrDefault(calendarNode, "email", new Value("")).getString();
+                                String pass = getPasswordOrDefault(calendarNode, "");
+                                boolean autoDisc = getROConfigOrDefault(calendarNode, "autoDiscoverUrl", new Value(true)).getBool();
+                                String url = getROConfigOrDefault(calendarNode, "url", new Value("")).getString();
+                                if (autoDisc) {
+                                    cal = new ExchangeCalendar(calendarNode, version, email, pass);
+                                } else {
+                                    cal = new ExchangeCalendar(calendarNode, version, email, pass, url);
+                                }
+                                CALENDARS.put(calendarNode.getName(), cal);
+                                cal.startUpdateLoop();
                             default:
                                 throw new Exception("Unknown calendar type");
                         }
-                        calendars.put(calendarNode.getName(), cal);
+                        CALENDARS.put(calendarNode.getName(), cal);
                     }
 
                     Actions.addRemoveCalendarNode(calendarNode);
                     Actions.addRefreshCalendarNode(calendarNode);
                     Actions.addCreateEventNode(calendarNode);
                 }
-            } catch(Exception e) {
+            } catch (Exception e) {
                 System.err.println("Error restoring:");
                 e.printStackTrace();
             }
         }
+    }
+
+    private static Value getROConfigOrDefault(Node n, String name, Value def) {
+        Value val = n.getRoConfig(name);
+        if (val == null) {
+            n.setRoConfig(name, def);
+            return def;
+        }
+        return val;
+    }
+
+    private static String getPasswordOrDefault(Node n, String def) {
+        char[] parr = n.getPassword();
+        if (parr == null) {
+            n.setPassword(def.toCharArray());
+            return def;
+        }
+        return String.valueOf(parr);
     }
 }

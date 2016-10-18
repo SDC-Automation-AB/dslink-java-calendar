@@ -34,6 +34,7 @@ import static com.google.api.client.googleapis.auth.oauth2.GoogleOAuthConstants.
 import static com.google.api.client.googleapis.auth.oauth2.GoogleOAuthConstants.TOKEN_SERVER_URL;
 
 public class GoogleCalendar extends BaseCalendar {
+    public static final int CREDENTIALS_EXPIRATION_TIMEOUT = 60;
     private String clientId;
     private String clientSecret;
     private HttpTransport httpTransport;
@@ -99,8 +100,9 @@ public class GoogleCalendar extends BaseCalendar {
 
     private void authorizeExistingCredential(AuthorizationCodeFlow flow, String userId) throws IOException {
         Credential newCredential = flow.loadCredential(userId);
-        if (newCredential != null &&
-                (newCredential.getRefreshToken() != null || newCredential.getExpiresInSeconds() > 60)) {
+        if (newCredential != null
+                && (newCredential.getRefreshToken() != null
+                || newCredential.getExpiresInSeconds() > CREDENTIALS_EXPIRATION_TIMEOUT)) {
             credential = newCredential;
             createCalendarConnection();
             startUpdateLoop();
@@ -199,8 +201,8 @@ public class GoogleCalendar extends BaseCalendar {
 
         long now = new Date().getTime();
         for (DSAEvent event : events) {
-            if ((event.getStart().getTime() >= start.getTime() && event.getEnd().getTime() <= end.getTime()) ||
-                    (event.getEnd().getTime() >= now && event.getStart().getTime() <= now)) {
+            if ((event.getStart().getTime() >= start.getTime() && event.getEnd().getTime() <= end.getTime())
+                    || (event.getEnd().getTime() >= now && event.getStart().getTime() <= now)) {
                 newEvents.add(event);
             }
         }

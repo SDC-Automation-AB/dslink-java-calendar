@@ -13,6 +13,9 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class BaseCalendar {
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
+    private static final int UPDATE_LOOP_DELAY = 30;
+
     protected final Node eventsNode;
 
     public BaseCalendar(Node eventsNode) {
@@ -37,7 +40,7 @@ public abstract class BaseCalendar {
             public void run() {
                 updateCalendar();
             }
-        }, 0, 30, TimeUnit.SECONDS);
+        }, 0, UPDATE_LOOP_DELAY, TimeUnit.SECONDS);
     }
 
     public boolean supportsMultipleCalendars() {
