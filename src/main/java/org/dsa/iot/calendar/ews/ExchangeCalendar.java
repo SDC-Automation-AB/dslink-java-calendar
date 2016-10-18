@@ -49,7 +49,7 @@ public class ExchangeCalendar extends BaseCalendar {
     private Node node;
 
     private ExchangeService service;
-    public static final long ONE_YEAR_IN_MILLISECONDS = 31556952000L;
+    private static final long ONE_YEAR_IN_MILLISECONDS = 31556952000L;
 
     public ExchangeCalendar(Node calendarNode, ExchangeVersion exchangeVersion, String email, String password) {
         super(calendarNode.getChild("events"));
