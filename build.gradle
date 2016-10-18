@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply plugin: 'findbugs'
 apply plugin: 'application'
 
-version '0.1.1'
+version '0.2.0'
 
 mainClassName = 'org.dsa.iot.calendar.Main'
 sourceCompatibility = 1.7
@@ -16,7 +16,7 @@ repositories {
     }
 
     maven {
-        url "https://raw.githubusercontent.com/caldav4j/maven/master/repo/"
+        url "https://github.com/caldav4j/maven/tree/master/repo/"
     }
 }
 
@@ -33,9 +33,16 @@ dependencies {
     // Google Calendar support
     compile 'com.google.api-client:google-api-client-java6:1.22.0'
     compile 'com.google.apis:google-api-services-calendar:v3-rev202-1.22.0'
-    
+
     // Exchange Web Services Support
     compile 'com.microsoft.ews-java-api:ews-java-api:2.0'
+    compile 'com.arcbees:checkstyle:1.2'
+}
+
+apply plugin: 'checkstyle'
+checkstyle {
+    configFile = file("${project.rootDir}/checkstyle/checkstyle.xml")
+    toolVersion = '6.17'
 }
 
 tasks.withType(FindBugs) {

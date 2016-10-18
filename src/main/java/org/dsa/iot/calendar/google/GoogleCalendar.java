@@ -7,12 +7,14 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.DateTime;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.CalendarList;
 import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
+import com.google.api.services.calendar.model.EventDateTime;
 import org.dsa.iot.calendar.abstractions.BaseCalendar;
 import org.dsa.iot.calendar.abstractions.DSAIdentifier;
 import org.dsa.iot.calendar.abstractions.DSAEvent;
@@ -32,13 +34,14 @@ import static com.google.api.client.googleapis.auth.oauth2.GoogleOAuthConstants.
 import static com.google.api.client.googleapis.auth.oauth2.GoogleOAuthConstants.TOKEN_SERVER_URL;
 
 public class GoogleCalendar extends BaseCalendar {
+    public static final int CREDENTIALS_EXPIRATION_TIMEOUT = 60;
     private String clientId;
     private String clientSecret;
     private HttpTransport httpTransport;
     private JsonFactory jsonGenerator;
     private Calendar calendar;
     private Credential credential;
-    private final String userId = "user";
+    private final String userId;
 
     public GoogleCalendar(Node calendarNode, String clientId, String clientSecret) throws GeneralSecurityException, IOException {
         super(calendarNode.getChild("events"));
@@ -46,9 +49,10 @@ public class GoogleCalendar extends BaseCalendar {
         this.clientSecret = clientSecret;
         this.httpTransport = new NetHttpTransport();
         this.jsonGenerator = JacksonFactory.getDefaultInstance();
+        userId = calendarNode.getName();
     }
 
-    public void attemptAuthorize(Node calendarNode) throws IOException {
+    public void attemptAuthorize(final Node calendarNode) throws IOException {
         final AuthorizationCodeFlow flow = new AuthorizationCodeFlow.Builder(BearerToken.authorizationHeaderAccessMethod(),
                 httpTransport,
                 jsonGenerator,
@@ -64,13 +68,13 @@ public class GoogleCalendar extends BaseCalendar {
             url.setRedirectUri(GoogleOAuthConstants.OOB_REDIRECT_URI);
             url.set("accessType", "offline");
             url.set("approvalPrompt", "force");
-            calendarNode.createChild("googleLoginUrl")
+            final Node urlNode = calendarNode.createChild("googleLoginUrl")
                     .setDisplayName("Google Login URL")
                     .setSerializable(false)
                     .setValueType(ValueType.STRING)
                     .setValue(new Value(url.build()))
                     .build();
-            Node codeNode = calendarNode.createChild("googleLoginCode")
+            final Node codeNode = calendarNode.createChild("googleLoginCode")
                     .setDisplayName("Google Login Code")
                     .setSerializable(false)
                     .setValueType(ValueType.STRING)
@@ -83,6 +87,8 @@ public class GoogleCalendar extends BaseCalendar {
                     if (value != null && value.getString() != null) {
                         try {
                             authorize(flow, value.getString());
+                            calendarNode.removeChild(urlNode);
+                            calendarNode.removeChild(codeNode);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -95,13 +101,10 @@ public class GoogleCalendar extends BaseCalendar {
     private void authorizeExistingCredential(AuthorizationCodeFlow flow, String userId) throws IOException {
         Credential newCredential = flow.loadCredential(userId);
         if (newCredential != null
-                && (newCredential.getRefreshToken() != null || newCredential.getExpiresInSeconds() > 60)) {
+                && (newCredential.getRefreshToken() != null
+                || newCredential.getExpiresInSeconds() > CREDENTIALS_EXPIRATION_TIMEOUT)) {
             credential = newCredential;
-            calendar = new Calendar.Builder(httpTransport,
-                    jsonGenerator,
-                    credential)
-                    .setApplicationName("dslink-java-calendar")
-                    .build();
+            createCalendarConnection();
             startUpdateLoop();
         }
     }
@@ -109,23 +112,52 @@ public class GoogleCalendar extends BaseCalendar {
     private void authorize(AuthorizationCodeFlow flow, String code) throws IOException {
         TokenResponse response = flow.newTokenRequest(code).setRedirectUri(GoogleOAuthConstants.OOB_REDIRECT_URI).execute();
         credential = flow.createAndStoreCredential(response, userId);
+        createCalendarConnection();
+        startUpdateLoop();
+    }
+
+    private void createCalendarConnection() {
         calendar = new Calendar.Builder(httpTransport,
                 jsonGenerator,
                 credential)
                 .setApplicationName("dslink-java-calendar")
                 .build();
-        startUpdateLoop();
     }
 
     @Override
     public void createEvent(DSAEvent event) {
-        /*Event googleEvent = new Event();
+        Event googleEvent = new Event();
+        EventDateTime startEventDateTime = new EventDateTime();
+        EventDateTime endEventDateTime = new EventDateTime();
+        startEventDateTime.setDateTime(new DateTime(event.getStart()));
+        startEventDateTime.setTimeZone("UTC");
+        endEventDateTime.setDateTime(new DateTime(event.getEnd()));
+        endEventDateTime.setTimeZone("UTC");
         googleEvent.setSummary(event.getTitle());
-        googleEvent.setDescription(event.getDescription());*/
+        googleEvent.setDescription(event.getDescription());
+        googleEvent.setStart(startEventDateTime);
+        googleEvent.setEnd(endEventDateTime);
+        googleEvent.setLocation(event.getLocation());
+        try {
+            Event submittedEvent = calendar.events().insert(event.getCalendar().getUid(), googleEvent).execute();
+            event.setUniqueId(submittedEvent.getId());
+            createEventNode(event);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void deleteEvent(String uid, boolean destroyNode) {
+        try {
+            String calendarId = eventsNode.getChild(uid).getChild("calendarId").getValue().getString();
+            calendar.events().delete(calendarId, uid).execute();
+            if (destroyNode) {
+                eventsNode.removeChild(uid);
+            }
+        } catch (IOException | NullPointerException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -138,6 +170,7 @@ public class GoogleCalendar extends BaseCalendar {
                     DSAEvent dsaEvent = new DSAEvent(event.getSummary());
                     dsaEvent.setUniqueId(event.getId());
                     dsaEvent.setDescription(event.getDescription());
+                    dsaEvent.setLocation(event.getLocation());
                     dsaEvent.setCalendar(new DSAIdentifier(listEntry.getId(), listEntry.getSummary()));
                     if (event.getStart() != null) {
                         if (event.getStart().getDate() != null) {
@@ -160,6 +193,21 @@ public class GoogleCalendar extends BaseCalendar {
             e.printStackTrace();
         }
         return events;
+    }
+
+    public List<DSAEvent> getEvents(Date start, Date end) {
+        List<DSAEvent> events = getEvents();
+        List<DSAEvent> newEvents = new ArrayList<>();
+
+        long now = new Date().getTime();
+        for (DSAEvent event : events) {
+            if ((event.getStart().getTime() >= start.getTime() && event.getEnd().getTime() <= end.getTime())
+                    || (event.getEnd().getTime() >= now && event.getStart().getTime() <= now)) {
+                newEvents.add(event);
+            }
+        }
+
+        return newEvents;
     }
 
     @Override
