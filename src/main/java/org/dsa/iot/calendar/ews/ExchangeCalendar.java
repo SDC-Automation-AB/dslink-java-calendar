@@ -190,12 +190,6 @@ public class ExchangeCalendar extends BaseCalendar {
 
     }
 
-    @Override
-    public List<DSAEvent> getEvents(Date start, Date end) {
-        // TODO Implement this
-        return new ArrayList<>();
-    }
-
     private void makeEditAction() {
         Action act = new Action(Permission.CONFIG, new Handler<ActionResult>() {
             @Override

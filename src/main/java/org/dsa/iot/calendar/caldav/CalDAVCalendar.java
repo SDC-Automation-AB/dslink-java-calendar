@@ -117,9 +117,4 @@ public class CalDAVCalendar extends BaseCalendar {
 
         return events;
     }
-
-    @Override
-    public List<DSAEvent> getEvents(java.util.Date start, java.util.Date end) {
-        return new ArrayList<>();
-    }
 }

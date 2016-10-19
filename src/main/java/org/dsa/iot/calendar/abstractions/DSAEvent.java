@@ -19,6 +19,21 @@ public class DSAEvent {
         timeZone = TimeZone.getDefault().getID();
     }
 
+    /**
+     * Check whether the provided datetime is within the range of the
+     * event's start and end datetime.
+     * @param start Start datetime range.
+     * @param end End datetime range.
+     * @return True if the datetime is within this event's range.
+     */
+    public final boolean checkInRange(Date start, Date end) {
+        long nowTime = new Date().getTime();
+        long rangeStartTime = start.getTime();
+        long rangeEndTime = end.getTime();
+        return (getStart().getTime() >= rangeStartTime && getEnd().getTime() <= rangeEndTime)
+                || (getEnd().getTime() >= nowTime && getStart().getTime() <= nowTime);
+    }
+
     public String getUniqueId() {
         return uniqueId;
     }

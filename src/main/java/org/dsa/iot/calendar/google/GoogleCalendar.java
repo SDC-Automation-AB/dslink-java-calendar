@@ -34,7 +34,7 @@ import static com.google.api.client.googleapis.auth.oauth2.GoogleOAuthConstants.
 import static com.google.api.client.googleapis.auth.oauth2.GoogleOAuthConstants.TOKEN_SERVER_URL;
 
 public class GoogleCalendar extends BaseCalendar {
-    public static final int CREDENTIALS_EXPIRATION_TIMEOUT = 60;
+    private static final int CREDENTIALS_EXPIRATION_TIMEOUT = 60;
     private String clientId;
     private String clientSecret;
     private HttpTransport httpTransport;
@@ -47,8 +47,8 @@ public class GoogleCalendar extends BaseCalendar {
         super(calendarNode.getChild("events"));
         this.clientId = clientId;
         this.clientSecret = clientSecret;
-        this.httpTransport = new NetHttpTransport();
-        this.jsonGenerator = JacksonFactory.getDefaultInstance();
+        httpTransport = new NetHttpTransport();
+        jsonGenerator = JacksonFactory.getDefaultInstance();
         userId = calendarNode.getName();
     }
 
@@ -193,21 +193,6 @@ public class GoogleCalendar extends BaseCalendar {
             e.printStackTrace();
         }
         return events;
-    }
-
-    public List<DSAEvent> getEvents(Date start, Date end) {
-        List<DSAEvent> events = getEvents();
-        List<DSAEvent> newEvents = new ArrayList<>();
-
-        long now = new Date().getTime();
-        for (DSAEvent event : events) {
-            if ((event.getStart().getTime() >= start.getTime() && event.getEnd().getTime() <= end.getTime())
-                    || (event.getEnd().getTime() >= now && event.getStart().getTime() <= now)) {
-                newEvents.add(event);
-            }
-        }
-
-        return newEvents;
     }
 
     @Override
