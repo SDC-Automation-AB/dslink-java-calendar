@@ -6,6 +6,8 @@ import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.provider.LoopProvider;
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -100,6 +102,10 @@ public abstract class BaseCalendar {
                     .setDisplayName("Location")
                     .setValueType(ValueType.STRING)
                     .build();
+            eventNode.createChild("guests")
+                    .setDisplayName("Guests")
+                    .setValueType(ValueType.ARRAY)
+                    .build();
         }
         String title = event.getTitle();
         String description = event.getDescription();
@@ -108,6 +114,7 @@ public abstract class BaseCalendar {
         String timeZone = event.getTimeZone();
         String location = event.getLocation();
         DSAIdentifier calendarIdentifier = event.getCalendar();
+        List<DSAGuest> guests = event.getGuests();
         if (title != null) {
             eventNode.setDisplayName(title);
         }
@@ -125,6 +132,18 @@ public abstract class BaseCalendar {
         }
         if (location != null) {
             eventNode.getChild("location").setValue(new Value(location));
+        }
+        if (guests != null && !guests.isEmpty()) {
+            JsonArray guestsJson = new JsonArray();
+            for (DSAGuest guest : guests) {
+                JsonObject guestJson = new JsonObject();
+                guestJson.put("uid", guest.getUniqueId());
+                guestJson.put("name", guest.getDisplayName());
+                guestJson.put("email", guest.getEmail());
+                guestJson.put("organizer", guest.isOrganizer());
+                guestsJson.add(guestJson);
+            }
+            eventNode.getChild("guests").setValue(new Value(guestsJson));
         }
         if (calendarIdentifier != null) {
             eventNode.getChild("calendar").setValue(new Value(calendarIdentifier.getTitle()));

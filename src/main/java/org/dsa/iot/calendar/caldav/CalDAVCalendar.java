@@ -23,6 +23,9 @@ import org.osaf.caldav4j.util.GenerateQuery;
 
 import java.util.*;
 
+/**
+ * TODO: Implement attendees
+ */
 public class CalDAVCalendar extends BaseCalendar {
     private final HttpClient httpClient;
     private final CalDAVCollection caldavCollection;

@@ -11,11 +11,9 @@ import com.google.api.client.util.DateTime;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.CalendarScopes;
-import com.google.api.services.calendar.model.CalendarList;
-import com.google.api.services.calendar.model.CalendarListEntry;
-import com.google.api.services.calendar.model.Event;
-import com.google.api.services.calendar.model.EventDateTime;
+import com.google.api.services.calendar.model.*;
 import org.dsa.iot.calendar.abstractions.BaseCalendar;
+import org.dsa.iot.calendar.abstractions.DSAGuest;
 import org.dsa.iot.calendar.abstractions.DSAIdentifier;
 import org.dsa.iot.calendar.abstractions.DSAEvent;
 import org.dsa.iot.dslink.node.Node;
@@ -138,6 +136,16 @@ public class GoogleCalendar extends BaseCalendar {
         googleEvent.setStart(startEventDateTime);
         googleEvent.setEnd(endEventDateTime);
         googleEvent.setLocation(event.getLocation());
+        List<EventAttendee> attendees = new ArrayList<>();
+        for (DSAGuest guest : event.getGuests()) {
+            EventAttendee attendee = new EventAttendee();
+            attendee.setId(guest.getUniqueId());
+            attendee.setDisplayName(guest.getDisplayName());
+            attendee.setEmail(guest.getEmail());
+            attendee.setOrganizer(guest.isOrganizer());
+            attendees.add(attendee);
+        }
+        googleEvent.setAttendees(attendees);
         try {
             Event submittedEvent = calendar.events().insert(event.getCalendar().getUid(), googleEvent).execute();
             event.setUniqueId(submittedEvent.getId());
@@ -184,6 +192,23 @@ public class GoogleCalendar extends BaseCalendar {
                             dsaEvent.setEnd(new Date(event.getEnd().getDate().getValue()));
                         } else if (event.getEnd().getDateTime() != null) {
                             dsaEvent.setEnd(new Date(event.getEnd().getDateTime().getValue()));
+                        }
+                    }
+                    if (event.getAttendees() != null) {
+                        for (EventAttendee attendee : event.getAttendees()) {
+                            DSAGuest guest = new DSAGuest();
+                            if (attendee.getId() != null) {
+                                guest.setUniqueId(attendee.getId());
+                            }
+                            if (attendee.getDisplayName() != null) {
+                                guest.setDisplayName(attendee.getDisplayName());
+                            }
+                            if (attendee.getEmail() != null) {
+                                guest.setEmail(attendee.getEmail());
+                            }
+                            if (attendee.getOrganizer() != null) {
+                                guest.setOrganizer(attendee.getOrganizer());
+                            }
                         }
                     }
                     events.add(dsaEvent);
