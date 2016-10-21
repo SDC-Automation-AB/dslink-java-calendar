@@ -32,12 +32,12 @@ public abstract class BaseCalendar {
      * @param end End time
      * @return List of strings to unique ids.
      */
-    public List<DSAEvent> getEvents(Date start, Date end) {
+    public List<DSAEvent> getEventsInRange(Date start, Date end) {
         List<DSAEvent> events = getEvents();
         List<DSAEvent> newEvents = new ArrayList<>();
 
         for (DSAEvent event : events) {
-            if (event.checkInRange(start, end)) {
+            if (event.isInRange(start, end)) {
                 newEvents.add(event);
             }
         }

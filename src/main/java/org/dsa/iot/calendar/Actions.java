@@ -360,10 +360,10 @@ public class Actions {
                                 event.setCalendar(new DSAIdentifier(calUid, calTitle));
                             }
                             calendar.createEvent(event);
-                            actionResult.getTable().addRow(Row.make(new Value(true)));
+                            actionResult.getTable().addRow(Row.make(new Value("Event created.")));
                         } catch (Exception e) {
                             e.printStackTrace();
-                            actionResult.getTable().addRow(Row.make(new Value(false)));
+                            actionResult.getTable().addRow(Row.make(new Value("Error occurred: " + e.getMessage())));
                         }
                     }
                 }
@@ -382,7 +382,7 @@ public class Actions {
                 addParameter(new Parameter("calendar", ValueType.makeEnum(calendars)));
             }
 
-            addResult(new Parameter("success", ValueType.BOOL));
+            addResult(new Parameter("success", ValueType.STRING));
         }
     }
 
@@ -461,7 +461,7 @@ public class Actions {
                         String[] dates = timeRange.split("/", 2);
                         Date startDate = BaseCalendar.DATE_FORMAT.parse(dates[0]);
                         Date endDate = BaseCalendar.DATE_FORMAT.parse(dates[1]);
-                        List<DSAEvent> events = calendar.getEvents(startDate, endDate);
+                        List<DSAEvent> events = calendar.getEventsInRange(startDate, endDate);
                         actionResult.getTable().setMode(Table.Mode.APPEND);
                         for (DSAEvent event : events) {
                             actionResult

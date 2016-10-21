@@ -26,7 +26,7 @@ public class DSAEvent {
      * @param end End datetime range.
      * @return True if the datetime is within this event's range.
      */
-    public final boolean checkInRange(Date start, Date end) {
+    public final boolean isInRange(Date start, Date end) {
         long nowTime = new Date().getTime();
         long rangeStartTime = start.getTime();
         long rangeEndTime = end.getTime();
