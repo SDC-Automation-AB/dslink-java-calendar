@@ -1,7 +1,6 @@
 package org.dsa.iot.calendar;
 
 import microsoft.exchange.webservices.data.core.enumeration.misc.ExchangeVersion;
-
 import org.dsa.iot.calendar.abstractions.BaseCalendar;
 import org.dsa.iot.calendar.abstractions.DSAEvent;
 import org.dsa.iot.calendar.abstractions.DSAIdentifier;
@@ -21,6 +20,7 @@ import org.dsa.iot.dslink.util.handler.Handler;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -346,8 +346,8 @@ public class Actions {
                                 throw new Exception("Unexpected dates length");
                             }
                             System.out.println(timeRange);
-                            Date startDate = BaseCalendar.DATE_FORMAT.parse(dates[0]);
-                            Date endDate = BaseCalendar.DATE_FORMAT.parse(dates[1]);
+                            Date startDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[0]);
+                            Date endDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[1]);
                             String location = actionResult.getParameter("location", new Value("")).getString();
                             event.setStart(startDate);
                             event.setEnd(endDate);
@@ -403,8 +403,8 @@ public class Actions {
                             if (dates.length != 2) {
                                 throw new Exception("Unexpected dates length");
                             }
-                            Date startDate = BaseCalendar.DATE_FORMAT.parse(dates[0]);
-                            Date endDate = BaseCalendar.DATE_FORMAT.parse(dates[1]);
+                            Date startDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[0]);
+                            Date endDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[1]);
                             event.setStart(startDate);
                             event.setEnd(endDate);
                             event.setLocation(location);
@@ -459,19 +459,20 @@ public class Actions {
                     try {
                         String timeRange = actionResult.getParameter("timeRange").getString();
                         String[] dates = timeRange.split("/", 2);
-                        Date startDate = BaseCalendar.DATE_FORMAT.parse(dates[0]);
-                        Date endDate = BaseCalendar.DATE_FORMAT.parse(dates[1]);
+                        Date startDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[0]);
+                        Date endDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[1]);
                         List<DSAEvent> events = calendar.getEvents(startDate, endDate);
                         actionResult.getTable().setMode(Table.Mode.APPEND);
                         for (DSAEvent event : events) {
+                            SimpleDateFormat simpleDateFormat = new SimpleDateFormat(BaseCalendar.DATE_PATTERN);
                             actionResult
                                     .getTable()
                                     .addRow(Row.make(
                                             new Value(event.getUniqueId()),
                                             new Value(event.getTitle()),
                                             new Value(event.getDescription()),
-                                            new Value(BaseCalendar.DATE_FORMAT.format(event.getStart())),
-                                            new Value(BaseCalendar.DATE_FORMAT.format(event.getEnd())),
+                                            new Value(simpleDateFormat.format(event.getStart())),
+                                            new Value(simpleDateFormat.format(event.getEnd())),
                                             new Value(event.getTimeZone()),
                                             new Value(event.getCalendar().getTitle()),
                                             new Value(event.getCalendar().getUid()),

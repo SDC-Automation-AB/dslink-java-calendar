@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public abstract class BaseCalendar {
-    public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+    public static final String DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
 
     private static final int UPDATE_LOOP_DELAY = 30;
 
@@ -104,10 +104,10 @@ public abstract class BaseCalendar {
             eventNode.getChild("description").setValue(new Value(description));
         }
         if (startString != null) {
-            eventNode.getChild("start").setValue(new Value(DATE_FORMAT.format(startString)));
+            eventNode.getChild("start").setValue(new Value(new SimpleDateFormat(DATE_PATTERN).format(startString)));
         }
         if (endString != null) {
-            eventNode.getChild("end").setValue(new Value(DATE_FORMAT.format(endString)));
+            eventNode.getChild("end").setValue(new Value(new SimpleDateFormat(DATE_PATTERN).format(endString)));
         }
         if (timeZone != null) {
             eventNode.getChild("timeZone").setValue(new Value(timeZone));

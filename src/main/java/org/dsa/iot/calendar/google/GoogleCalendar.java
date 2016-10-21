@@ -34,7 +34,7 @@ import static com.google.api.client.googleapis.auth.oauth2.GoogleOAuthConstants.
 import static com.google.api.client.googleapis.auth.oauth2.GoogleOAuthConstants.TOKEN_SERVER_URL;
 
 public class GoogleCalendar extends BaseCalendar {
-    public static final int CREDENTIALS_EXPIRATION_TIMEOUT = 60;
+    private static final int CREDENTIALS_EXPIRATION_TIMEOUT = 60;
     private String clientId;
     private String clientSecret;
     private HttpTransport httpTransport;
