@@ -15,6 +15,7 @@ import com.google.api.services.calendar.model.CalendarList;
 import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
+import org.dsa.iot.calendar.Actions;
 import org.dsa.iot.calendar.abstractions.BaseCalendar;
 import org.dsa.iot.calendar.abstractions.DSAIdentifier;
 import org.dsa.iot.calendar.abstractions.DSAEvent;
@@ -208,7 +209,7 @@ public class GoogleCalendar extends BaseCalendar {
             for (CalendarListEntry listEntry : calendarList.getItems()) {
                 calendars.add(new DSAIdentifier(listEntry.getId(), listEntry.getSummary()));
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return calendars;
