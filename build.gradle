@@ -18,10 +18,6 @@ repositories {
     maven {
         url "https://raw.githubusercontent.com/caldav4j/maven/master/repo/"
     }
-
-    maven {
-        url "https://github.com/caldav4j/maven/tree/master/repo/"
-    }
 }
 
 dependencies {

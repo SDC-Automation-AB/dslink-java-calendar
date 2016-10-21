@@ -47,11 +47,11 @@ public class DSAEvent {
     }
 
     public Date getStart() {
-        return start;
+        return new Date(start.getTime());
     }
 
     public Date getEnd() {
-        return end;
+        return new Date(end.getTime());
     }
 
     public String getTimeZone() {
@@ -83,11 +83,11 @@ public class DSAEvent {
     }
 
     public void setStart(Date start) {
-        this.start = start;
+        this.start = new Date(start.getTime());
     }
 
     public void setEnd(Date end) {
-        this.end = end;
+        this.end = new Date(end.getTime());
     }
 
     public void setTimeZone(String timeZone) {
