@@ -209,6 +209,7 @@ public class GoogleCalendar extends BaseCalendar {
                             if (attendee.getOrganizer() != null) {
                                 guest.setOrganizer(attendee.getOrganizer());
                             }
+                            dsaEvent.getGuests().add(guest);
                         }
                     }
                     events.add(dsaEvent);

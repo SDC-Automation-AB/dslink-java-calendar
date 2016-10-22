@@ -64,49 +64,44 @@ public abstract class BaseCalendar {
         return new ArrayList<>();
     }
 
-    public void createEventNode(DSAEvent event) {
-        Node eventNode;
-        if (eventsNode.hasChild(event.getUniqueId())) {
-            eventNode = eventsNode.getChild(event.getUniqueId());
-        } else {
-            // Add event node.
-            NodeBuilder eventBuilder = eventsNode.createChild(event.getUniqueId());
-            eventNode = eventBuilder.build();
-            eventBuilder.setDisplayName(event.getTitle());
-            eventBuilder.setAttribute("type", new Value("event"));
-            eventNode.createChild("description")
-                    .setDisplayName("Description")
-                    .setValueType(ValueType.STRING)
-                    .build();
-            eventNode.createChild("start")
-                    .setDisplayName("Start")
-                    .setValueType(ValueType.STRING)
-                    .build();
-            eventNode.createChild("end")
-                    .setDisplayName("End")
-                    .setValueType(ValueType.STRING)
-                    .build();
-            eventNode.createChild("timeZone")
-                    .setDisplayName("Time Zone")
-                    .setValueType(ValueType.STRING)
-                    .build();
-            eventNode.createChild("calendar")
-                    .setDisplayName("Calendar")
-                    .setValueType(ValueType.STRING)
-                    .build();
-            eventNode.createChild("calendarId")
-                    .setDisplayName("Calendar ID")
-                    .setValueType(ValueType.STRING)
-                    .build();
-            eventNode.createChild("location")
-                    .setDisplayName("Location")
-                    .setValueType(ValueType.STRING)
-                    .build();
-            eventNode.createChild("guests")
-                    .setDisplayName("Guests")
-                    .setValueType(ValueType.ARRAY)
-                    .build();
-        }
+    protected void createEventNode(DSAEvent event) {
+        // Add event node.
+        NodeBuilder eventBuilder = eventsNode.createChild(event.getUniqueId());
+        Node eventNode = eventBuilder.build();
+        eventBuilder.setDisplayName(event.getTitle());
+        eventBuilder.setAttribute("type", new Value("event"));
+        eventNode.createChild("description")
+                .setDisplayName("Description")
+                .setValueType(ValueType.STRING)
+                .build();
+        eventNode.createChild("start")
+                .setDisplayName("Start")
+                .setValueType(ValueType.STRING)
+                .build();
+        eventNode.createChild("end")
+                .setDisplayName("End")
+                .setValueType(ValueType.STRING)
+                .build();
+        eventNode.createChild("timeZone")
+                .setDisplayName("Time Zone")
+                .setValueType(ValueType.STRING)
+                .build();
+        eventNode.createChild("calendar")
+                .setDisplayName("Calendar")
+                .setValueType(ValueType.STRING)
+                .build();
+        eventNode.createChild("calendarId")
+                .setDisplayName("Calendar ID")
+                .setValueType(ValueType.STRING)
+                .build();
+        eventNode.createChild("location")
+                .setDisplayName("Location")
+                .setValueType(ValueType.STRING)
+                .build();
+        eventNode.createChild("guests")
+                .setDisplayName("Guests")
+                .setValueType(ValueType.ARRAY)
+                .build();
         String title = event.getTitle();
         String description = event.getDescription();
         Date startString = event.getStart();
@@ -118,22 +113,22 @@ public abstract class BaseCalendar {
         if (title != null) {
             eventNode.setDisplayName(title);
         }
-        if (description != null) {
+        if (description != null && eventNode.hasChild("description")) {
             eventNode.getChild("description").setValue(new Value(description));
         }
-        if (startString != null) {
+        if (startString != null && eventNode.hasChild("start")) {
             eventNode.getChild("start").setValue(new Value(new SimpleDateFormat(DATE_PATTERN).format(startString)));
         }
-        if (endString != null) {
+        if (endString != null && eventNode.hasChild("end")) {
             eventNode.getChild("end").setValue(new Value(new SimpleDateFormat(DATE_PATTERN).format(endString)));
         }
-        if (timeZone != null) {
+        if (timeZone != null && eventNode.hasChild("timeZone")) {
             eventNode.getChild("timeZone").setValue(new Value(timeZone));
         }
-        if (location != null) {
+        if (location != null && eventNode.hasChild("location")) {
             eventNode.getChild("location").setValue(new Value(location));
         }
-        if (guests != null && !guests.isEmpty()) {
+        if (guests != null && !guests.isEmpty() && eventNode.hasChild("guests")) {
             JsonArray guestsJson = new JsonArray();
             for (DSAGuest guest : guests) {
                 JsonObject guestJson = new JsonObject();
@@ -145,7 +140,7 @@ public abstract class BaseCalendar {
             }
             eventNode.getChild("guests").setValue(new Value(guestsJson));
         }
-        if (calendarIdentifier != null) {
+        if (calendarIdentifier != null && eventNode.hasChild("calendar") && eventNode.hasChild("calendarId")) {
             eventNode.getChild("calendar").setValue(new Value(calendarIdentifier.getTitle()));
             eventNode.getChild("calendarId").setValue(new Value(calendarIdentifier.getUid()));
         }
