@@ -23,6 +23,9 @@ import org.osaf.caldav4j.util.GenerateQuery;
 
 import java.util.*;
 
+/**
+ * TODO: Implement attendees
+ */
 public class CalDAVCalendar extends BaseCalendar {
     private final HttpClient httpClient;
     private final CalDAVCollection caldavCollection;
@@ -116,10 +119,5 @@ public class CalDAVCalendar extends BaseCalendar {
         }
 
         return events;
-    }
-
-    @Override
-    public List<DSAEvent> getEvents(java.util.Date start, java.util.Date end) {
-        return new ArrayList<>();
     }
 }

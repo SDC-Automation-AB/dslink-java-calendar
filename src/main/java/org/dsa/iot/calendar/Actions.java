@@ -71,6 +71,7 @@ public class Actions {
         return refreshBuilder.build();
     }
 
+    // TODO: We need to refresh calendars parameter when calendar is refreshed, if the provider supports multiple calendars.
     static Node addCreateEventNode(Node calendarNode) {
         NodeBuilder createEventNode = calendarNode.createChild("createAnEvent");
         createEventNode.setDisplayName("Create Event");
@@ -345,7 +346,6 @@ public class Actions {
                             if (dates.length != 2) {
                                 throw new Exception("Unexpected dates length");
                             }
-                            System.out.println(timeRange);
                             Date startDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[0]);
                             Date endDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[1]);
                             String location = actionResult.getParameter("location", new Value("")).getString();
@@ -360,10 +360,10 @@ public class Actions {
                                 event.setCalendar(new DSAIdentifier(calUid, calTitle));
                             }
                             calendar.createEvent(event);
-                            actionResult.getTable().addRow(Row.make(new Value(true)));
+                            actionResult.getTable().addRow(Row.make(new Value("Event created.")));
                         } catch (Exception e) {
                             e.printStackTrace();
-                            actionResult.getTable().addRow(Row.make(new Value(false)));
+                            actionResult.getTable().addRow(Row.make(new Value("Error occurred: " + e.getMessage())));
                         }
                     }
                 }
@@ -382,7 +382,7 @@ public class Actions {
                 addParameter(new Parameter("calendar", ValueType.makeEnum(calendars)));
             }
 
-            addResult(new Parameter("success", ValueType.BOOL));
+            addResult(new Parameter("success", ValueType.STRING));
         }
     }
 
@@ -461,7 +461,7 @@ public class Actions {
                         String[] dates = timeRange.split("/", 2);
                         Date startDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[0]);
                         Date endDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[1]);
-                        List<DSAEvent> events = calendar.getEvents(startDate, endDate);
+                        List<DSAEvent> events = calendar.getEventsInRange(startDate, endDate);
                         actionResult.getTable().setMode(Table.Mode.APPEND);
                         for (DSAEvent event : events) {
                             SimpleDateFormat simpleDateFormat = new SimpleDateFormat(BaseCalendar.DATE_PATTERN);
@@ -476,7 +476,8 @@ public class Actions {
                                             new Value(event.getTimeZone()),
                                             new Value(event.getCalendar().getTitle()),
                                             new Value(event.getCalendar().getUid()),
-                                            new Value(event.getLocation())));
+                                            new Value(event.getLocation()),
+                                            new Value(event.serializeGuests())));
                         }
                     } catch (ParseException e) {
                         e.printStackTrace();
@@ -496,6 +497,7 @@ public class Actions {
             addResult(new Parameter("CalendarID", ValueType.STRING));
             addResult(new Parameter("CalendarTitle", ValueType.STRING));
             addResult(new Parameter("Location", ValueType.STRING));
+            addResult(new Parameter("Guests", ValueType.ARRAY));
             setResultType(ResultType.TABLE);
         }
     }

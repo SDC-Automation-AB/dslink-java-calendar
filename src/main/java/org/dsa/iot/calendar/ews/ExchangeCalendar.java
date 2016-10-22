@@ -37,6 +37,9 @@ import static microsoft.exchange.webservices.data.core.enumeration.service.Delet
 import static microsoft.exchange.webservices.data.core.enumeration.service.SendCancellationsMode.SendToNone;
 import static microsoft.exchange.webservices.data.core.enumeration.service.calendar.AffectedTaskOccurrence.SpecifiedOccurrenceOnly;
 
+/**
+ * TODO: Implement attendees
+ */
 public class ExchangeCalendar extends BaseCalendar {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExchangeCalendar.class);
 
@@ -188,12 +191,6 @@ public class ExchangeCalendar extends BaseCalendar {
         }
         return events;
 
-    }
-
-    @Override
-    public List<DSAEvent> getEvents(Date start, Date end) {
-        // TODO Implement this
-        return new ArrayList<>();
     }
 
     private void makeEditAction() {

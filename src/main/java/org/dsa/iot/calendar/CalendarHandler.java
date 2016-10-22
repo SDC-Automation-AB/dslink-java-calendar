@@ -48,6 +48,7 @@ public class CalendarHandler extends DSLinkHandler {
                                 String path = calendarNode.getRoConfig("path").getString();
                                 Node eventsNode = calendarNode.getChild("events");
                                 cal = new CalDAVCalendar(host, port, path, eventsNode);
+                                CALENDARS.put(calendarNode.getName(), cal);
                                 break;
                             case "google":
                                 String clientId = calendarNode.getRoConfig("clientId").getString();
@@ -75,7 +76,6 @@ public class CalendarHandler extends DSLinkHandler {
                             default:
                                 throw new Exception("Unknown calendar type");
                         }
-                        CALENDARS.put(calendarNode.getName(), cal);
                     }
 
                     Actions.addRemoveCalendarNode(calendarNode);
