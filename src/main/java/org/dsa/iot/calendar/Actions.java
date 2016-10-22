@@ -71,6 +71,7 @@ public class Actions {
         return refreshBuilder.build();
     }
 
+    // TODO: We need to refresh calendars parameter when calendar is refreshed, if the provider supports multiple calendars.
     static Node addCreateEventNode(Node calendarNode) {
         NodeBuilder createEventNode = calendarNode.createChild("createAnEvent");
         createEventNode.setDisplayName("Create Event");

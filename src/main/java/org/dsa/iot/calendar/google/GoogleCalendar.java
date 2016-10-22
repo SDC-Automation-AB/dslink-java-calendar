@@ -234,7 +234,7 @@ public class GoogleCalendar extends BaseCalendar {
             for (CalendarListEntry listEntry : calendarList.getItems()) {
                 calendars.add(new DSAIdentifier(listEntry.getId(), listEntry.getSummary()));
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
         }
         return calendars;
