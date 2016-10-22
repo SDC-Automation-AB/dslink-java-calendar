@@ -1,5 +1,8 @@
 package org.dsa.iot.calendar.abstractions;
 
+import org.dsa.iot.dslink.util.json.JsonArray;
+import org.dsa.iot.dslink.util.json.JsonObject;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -112,5 +115,18 @@ public class DSAEvent {
 
     public List<DSAGuest> getGuests() {
         return guests;
+    }
+
+    public JsonArray serializeGuests() {
+        JsonArray guestsJson = new JsonArray();
+        for (DSAGuest guest : guests) {
+            JsonObject guestJson = new JsonObject();
+            guestJson.put("uid", guest.getUniqueId());
+            guestJson.put("name", guest.getDisplayName());
+            guestJson.put("email", guest.getEmail());
+            guestJson.put("organizer", guest.isOrganizer());
+            guestsJson.add(guestJson);
+        }
+        return guestsJson;
     }
 }

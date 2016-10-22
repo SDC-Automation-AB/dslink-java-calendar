@@ -6,8 +6,6 @@ import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.provider.LoopProvider;
-import org.dsa.iot.dslink.util.json.JsonArray;
-import org.dsa.iot.dslink.util.json.JsonObject;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -129,16 +127,7 @@ public abstract class BaseCalendar {
             eventNode.getChild("location").setValue(new Value(location));
         }
         if (guests != null && !guests.isEmpty() && eventNode.hasChild("guests")) {
-            JsonArray guestsJson = new JsonArray();
-            for (DSAGuest guest : guests) {
-                JsonObject guestJson = new JsonObject();
-                guestJson.put("uid", guest.getUniqueId());
-                guestJson.put("name", guest.getDisplayName());
-                guestJson.put("email", guest.getEmail());
-                guestJson.put("organizer", guest.isOrganizer());
-                guestsJson.add(guestJson);
-            }
-            eventNode.getChild("guests").setValue(new Value(guestsJson));
+            eventNode.getChild("guests").setValue(new Value(event.serializeGuests()));
         }
         if (calendarIdentifier != null && eventNode.hasChild("calendar") && eventNode.hasChild("calendarId")) {
             eventNode.getChild("calendar").setValue(new Value(calendarIdentifier.getTitle()));

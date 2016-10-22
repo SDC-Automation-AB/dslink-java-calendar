@@ -475,7 +475,8 @@ public class Actions {
                                             new Value(event.getTimeZone()),
                                             new Value(event.getCalendar().getTitle()),
                                             new Value(event.getCalendar().getUid()),
-                                            new Value(event.getLocation())));
+                                            new Value(event.getLocation()),
+                                            new Value(event.serializeGuests())));
                         }
                     } catch (ParseException e) {
                         e.printStackTrace();
@@ -495,6 +496,7 @@ public class Actions {
             addResult(new Parameter("CalendarID", ValueType.STRING));
             addResult(new Parameter("CalendarTitle", ValueType.STRING));
             addResult(new Parameter("Location", ValueType.STRING));
+            addResult(new Parameter("Guests", ValueType.ARRAY));
             setResultType(ResultType.TABLE);
         }
     }
