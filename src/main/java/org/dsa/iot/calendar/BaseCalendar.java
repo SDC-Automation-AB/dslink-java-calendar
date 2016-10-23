@@ -1,6 +1,7 @@
-package org.dsa.iot.calendar.abstractions;
+package org.dsa.iot.calendar;
 
-import org.dsa.iot.calendar.Actions;
+import org.dsa.iot.calendar.event.DSAEvent;
+import org.dsa.iot.calendar.guest.DSAGuest;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.value.Value;

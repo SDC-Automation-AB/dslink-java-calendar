@@ -1,9 +1,7 @@
 package org.dsa.iot.calendar;
 
 import microsoft.exchange.webservices.data.core.enumeration.misc.ExchangeVersion;
-import org.dsa.iot.calendar.abstractions.BaseCalendar;
-import org.dsa.iot.calendar.abstractions.DSAEvent;
-import org.dsa.iot.calendar.abstractions.DSAIdentifier;
+import org.dsa.iot.calendar.event.DSAEvent;
 import org.dsa.iot.calendar.caldav.CalDAVCalendar;
 import org.dsa.iot.calendar.ews.ExchangeCalendar;
 import org.dsa.iot.calendar.google.GoogleCalendar;

@@ -1,5 +1,7 @@
-package org.dsa.iot.calendar.abstractions;
+package org.dsa.iot.calendar.event;
 
+import org.dsa.iot.calendar.guest.DSAGuest;
+import org.dsa.iot.calendar.DSAIdentifier;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
