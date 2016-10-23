@@ -2,9 +2,6 @@ package org.dsa.iot.calendar.caldav;
 
 import com.fasterxml.uuid.Generators;
 import net.fortuna.ical4j.model.*;
-import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.Date;
-import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VTimeZone;
 import net.fortuna.ical4j.model.parameter.Cn;
@@ -13,8 +10,8 @@ import net.fortuna.ical4j.model.property.Description;
 import net.fortuna.ical4j.model.property.Location;
 import net.fortuna.ical4j.model.property.Uid;
 import org.apache.commons.httpclient.HostConfiguration;
-import org.dsa.iot.calendar.event.DSAEvent;
 import org.dsa.iot.calendar.BaseCalendar;
+import org.dsa.iot.calendar.event.DSAEvent;
 import org.dsa.iot.calendar.guest.DSAGuest;
 import org.dsa.iot.dslink.node.Node;
 import org.osaf.caldav4j.CalDAVCollection;
@@ -26,7 +23,8 @@ import org.osaf.caldav4j.model.request.CalendarQuery;
 import org.osaf.caldav4j.util.GenerateQuery;
 
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CalDAVCalendar extends BaseCalendar {
     private final HttpClient httpClient;
@@ -47,7 +45,9 @@ public class CalDAVCalendar extends BaseCalendar {
 
     @Override
     public void createEvent(DSAEvent event) {
-        VEvent vEvent = new VEvent(new Date(event.getStart().getTime()), new Date(event.getEnd().getTime()), event.getTitle());
+        java.util.Date start = Date.from(event.getStart());
+        java.util.Date end = Date.from(event.getEnd());
+        VEvent vEvent = new VEvent(new Date(start), new Date(end), event.getTitle());
         if (event.getUniqueId() != null) {
             // Add existing unique identifier.
             vEvent.getProperties().add(new Uid(event.getUniqueId()));
@@ -110,10 +110,10 @@ public class CalDAVCalendar extends BaseCalendar {
                         event.setDescription(vEvent.getDescription().getValue());
                     }
                     if (vEvent.getStartDate() != null) {
-                        event.setStart(vEvent.getStartDate().getDate());
+                        event.setStart(vEvent.getStartDate().getDate().toInstant());
                     }
                     if (vEvent.getEndDate() != null) {
-                        event.setEnd(vEvent.getEndDate().getDate());
+                        event.setEnd(vEvent.getEndDate().getDate().toInstant());
                     }
                     if (vEvent.getLocation() != null) {
                         event.setLocation(vEvent.getLocation().getValue());

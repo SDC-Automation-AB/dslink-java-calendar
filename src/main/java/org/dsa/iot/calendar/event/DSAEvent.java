@@ -1,12 +1,13 @@
 package org.dsa.iot.calendar.event;
 
-import org.dsa.iot.calendar.guest.DSAGuest;
 import org.dsa.iot.calendar.DSAIdentifier;
+import org.dsa.iot.calendar.guest.DSAGuest;
 import org.dsa.iot.dslink.util.json.JsonArray;
 import org.dsa.iot.dslink.util.json.JsonObject;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -14,18 +15,21 @@ public class DSAEvent {
     private String uniqueId;
     private String title;
     private String description;
-    private Date start;
-    private Date end;
+    private Instant start;
+    private Instant end;
     private String timeZone;
     private DSAIdentifier calendarIdentifier;
     private boolean readOnly;
     private String location;
     private List<DSAGuest> guests;
 
+    protected Clock clock;
+
     public DSAEvent(String title) {
         this.title = title;
         timeZone = TimeZone.getDefault().getID();
         guests = new ArrayList<>();
+        clock = Clock.systemDefaultZone();
     }
 
     /**
@@ -35,12 +39,10 @@ public class DSAEvent {
      * @param end End datetime range.
      * @return True if the datetime is within this event's range.
      */
-    public final boolean isInRange(Date start, Date end) {
-        long nowTime = new Date().getTime();
-        long rangeStartTime = start.getTime();
-        long rangeEndTime = end.getTime();
-        return (getStart().getTime() >= rangeStartTime && getEnd().getTime() <= rangeEndTime)
-                || (getEnd().getTime() >= nowTime && getStart().getTime() <= nowTime);
+    public final boolean isInRange(Instant start, Instant end) {
+        Instant now = Instant.now(clock);
+
+        return now.isAfter(start) && now.isBefore(end);
     }
 
     public String getUniqueId() {
@@ -67,20 +69,12 @@ public class DSAEvent {
         this.description = description;
     }
 
-    public Date getStart() {
-        return new Date(start.getTime());
+    public Instant getStart() {
+        return start;
     }
 
-    public void setStart(Date start) {
-        this.start = new Date(start.getTime());
-    }
-
-    public Date getEnd() {
-        return new Date(end.getTime());
-    }
-
-    public void setEnd(Date end) {
-        this.end = new Date(end.getTime());
+    public void setStart(Instant start) {
+        this.start = start;
     }
 
     public String getTimeZone() {
@@ -130,5 +124,13 @@ public class DSAEvent {
             guestsJson.add(guestJson);
         }
         return guestsJson;
+    }
+
+    public Instant getEnd() {
+        return end;
+    }
+
+    public void setEnd(Instant end) {
+        this.end = end;
     }
 }

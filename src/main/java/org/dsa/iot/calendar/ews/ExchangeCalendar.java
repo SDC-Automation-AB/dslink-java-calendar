@@ -127,8 +127,8 @@ public class ExchangeCalendar extends BaseCalendar {
             appointment = new Appointment(service);
             appointment.setSubject(event.getTitle());
             appointment.setBody(MessageBody.getMessageBodyFromText(event.getDescription()));
-            appointment.setStart(event.getStart());
-            appointment.setEnd(event.getEnd());
+            appointment.setStart(Date.from(event.getStart()));
+            appointment.setEnd(Date.from(event.getEnd()));
             appointment.setLocation(event.getLocation());
             for (DSAGuest guest : event.getGuests()) {
                 Attendee attendee = new Attendee();
@@ -183,8 +183,8 @@ public class ExchangeCalendar extends BaseCalendar {
                 } catch (ServiceLocalException e) {
                     event.setDescription("");
                 }
-                event.setStart(appointment.getStart());
-                event.setEnd(appointment.getEnd());
+                event.setStart(appointment.getStart().toInstant());
+                event.setEnd(appointment.getEnd().toInstant());
                 event.setLocation(appointment.getLocation());
                 for (Attendee attendee : appointment.getRequiredAttendees()) {
                     event.getGuests().add(exchangeToDSAGuest(attendee));
