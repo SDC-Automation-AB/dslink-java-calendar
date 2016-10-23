@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class EventUtilsTest {
+    public static final Duration expectedDuration = Duration.of(10, ChronoUnit.HOURS);
     private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
 
     @Before
@@ -22,7 +23,7 @@ public class EventUtilsTest {
         Instant now = Instant.now(clock);
         TimeRange expected = new TimeRange(now, now.plus(10, ChronoUnit.HOURS));
 
-        TimeRange timeRange = EventUtils.findNextFreeTimeRange(new ArrayList<>(), Duration.of(10, ChronoUnit.HOURS));
+        TimeRange timeRange = EventUtils.findNextFreeTimeRange(new ArrayList<>(), EventUtilsTest.expectedDuration);
 
         assertThat(timeRange).isEqualTo(expected);
     }
