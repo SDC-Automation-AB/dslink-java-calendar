@@ -26,5 +26,4 @@ public class EventUtilsTest {
 
         assertThat(timeRange).isEqualTo(expected);
     }
-
 }
