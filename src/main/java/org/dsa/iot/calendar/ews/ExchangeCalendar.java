@@ -8,6 +8,7 @@ import microsoft.exchange.webservices.data.core.exception.service.local.ServiceL
 import microsoft.exchange.webservices.data.core.service.item.Appointment;
 import microsoft.exchange.webservices.data.credential.ExchangeCredentials;
 import microsoft.exchange.webservices.data.credential.WebCredentials;
+import microsoft.exchange.webservices.data.property.complex.Attendee;
 import microsoft.exchange.webservices.data.property.complex.ItemId;
 import microsoft.exchange.webservices.data.property.complex.MessageBody;
 import microsoft.exchange.webservices.data.search.CalendarView;
@@ -15,6 +16,7 @@ import microsoft.exchange.webservices.data.search.FindItemsResults;
 import org.dsa.iot.calendar.Actions;
 import org.dsa.iot.calendar.abstractions.BaseCalendar;
 import org.dsa.iot.calendar.abstractions.DSAEvent;
+import org.dsa.iot.calendar.abstractions.DSAGuest;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.actions.Action;
@@ -37,9 +39,6 @@ import static microsoft.exchange.webservices.data.core.enumeration.service.Delet
 import static microsoft.exchange.webservices.data.core.enumeration.service.SendCancellationsMode.SendToNone;
 import static microsoft.exchange.webservices.data.core.enumeration.service.calendar.AffectedTaskOccurrence.SpecifiedOccurrenceOnly;
 
-/**
- * TODO: Implement attendees
- */
 public class ExchangeCalendar extends BaseCalendar {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExchangeCalendar.class);
 
@@ -128,17 +127,21 @@ public class ExchangeCalendar extends BaseCalendar {
             appointment = new Appointment(service);
             appointment.setSubject(event.getTitle());
             appointment.setBody(MessageBody.getMessageBodyFromText(event.getDescription()));
-            Date startDate = event.getStart();
-            Date endDate = event.getEnd();
-            appointment.setStart(startDate);
-            appointment.setEnd(endDate);
+            appointment.setStart(event.getStart());
+            appointment.setEnd(event.getEnd());
+            appointment.setLocation(event.getLocation());
+            for (DSAGuest guest : event.getGuests()) {
+                Attendee attendee = new Attendee();
+                attendee.setName(guest.getDisplayName());
+                attendee.setAddress(guest.getEmail());
+                appointment.getRequiredAttendees().add(attendee);
+            }
             appointment.save();
             String uid = appointment.getId().getUniqueId();
             event.setUniqueId(uid);
         } catch (Exception e) {
             LOGGER.debug("", e);
         }
-
     }
 
     @Override
@@ -165,32 +168,49 @@ public class ExchangeCalendar extends BaseCalendar {
             Date nextYear = new Date(System.currentTimeMillis() + ONE_YEAR_IN_MILLISECONDS);
             results = service.findAppointments(WellKnownFolderName.Calendar, new CalendarView(now, nextYear));
         } catch (Exception e) {
-            LOGGER.debug("Silented exception:", e);
+            LOGGER.debug("Silenced exception:", e);
         }
 
         if (results == null) {
             return events;
         }
 
-        for (Appointment appt : results) {
+        for (Appointment appointment : results) {
             try {
-                DSAEvent event = new DSAEvent(appt.getSubject());
+                DSAEvent event = new DSAEvent(appointment.getSubject());
                 try {
-                    event.setDescription(appt.getBody().toString());
+                    event.setDescription(appointment.getBody().toString());
                 } catch (ServiceLocalException e) {
                     event.setDescription("");
                 }
-                event.setStart(appt.getStart());
-                event.setEnd(appt.getEnd());
+                event.setStart(appointment.getStart());
+                event.setEnd(appointment.getEnd());
+                event.setLocation(appointment.getLocation());
+                for (Attendee attendee : appointment.getRequiredAttendees()) {
+                    event.getGuests().add(exchangeToDSAGuest(attendee));
+                }
+                for (Attendee attendee : appointment.getOptionalAttendees()) {
+                    event.getGuests().add(exchangeToDSAGuest(attendee));
+                }
                 event.setTimeZone("UTC");
-                event.setUniqueId(appt.getId().getUniqueId());
+                event.setUniqueId(appointment.getId().getUniqueId());
                 events.add(event);
             } catch (ServiceLocalException e) {
                 LOGGER.debug("", e);
             }
         }
         return events;
+    }
 
+    private DSAGuest exchangeToDSAGuest(Attendee attendee) {
+        DSAGuest guest = new DSAGuest();
+        if (attendee.getName() != null) {
+            guest.setDisplayName(attendee.getName());
+        }
+        if (attendee.getAddress() != null) {
+            guest.setEmail(attendee.getAddress());
+        }
+        return guest;
     }
 
     private void makeEditAction() {

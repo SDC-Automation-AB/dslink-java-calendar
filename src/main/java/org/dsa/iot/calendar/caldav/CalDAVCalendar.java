@@ -7,11 +7,15 @@ import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VTimeZone;
+import net.fortuna.ical4j.model.parameter.Cn;
+import net.fortuna.ical4j.model.property.Attendee;
 import net.fortuna.ical4j.model.property.Description;
+import net.fortuna.ical4j.model.property.Location;
 import net.fortuna.ical4j.model.property.Uid;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.dsa.iot.calendar.abstractions.DSAEvent;
 import org.dsa.iot.calendar.abstractions.BaseCalendar;
+import org.dsa.iot.calendar.abstractions.DSAGuest;
 import org.dsa.iot.dslink.node.Node;
 import org.osaf.caldav4j.CalDAVCollection;
 import org.osaf.caldav4j.CalDAVConstants;
@@ -21,11 +25,9 @@ import org.osaf.caldav4j.methods.HttpClient;
 import org.osaf.caldav4j.model.request.CalendarQuery;
 import org.osaf.caldav4j.util.GenerateQuery;
 
+import java.net.URI;
 import java.util.*;
 
-/**
- * TODO: Implement attendees
- */
 public class CalDAVCalendar extends BaseCalendar {
     private final HttpClient httpClient;
     private final CalDAVCollection caldavCollection;
@@ -54,6 +56,12 @@ public class CalDAVCalendar extends BaseCalendar {
             vEvent.getProperties().add(new Uid(Generators.timeBasedGenerator().generate().toString()));
         }
         vEvent.getProperties().add(new Description(event.getDescription()));
+        vEvent.getProperties().add(new Location(event.getLocation()));
+        for (DSAGuest guest : event.getGuests()) {
+            Attendee attendee = new Attendee(URI.create("mailto:" + guest.getEmail()));
+            attendee.getParameters().add(new Cn(guest.getDisplayName()));
+            vEvent.getProperties().add(attendee);
+        }
         VTimeZone vTimeZone = TimeZoneRegistryFactory.getInstance().createRegistry().getTimeZone(event.getTimeZone()).getVTimeZone();
         try {
             caldavCollection.add(httpClient, vEvent, vTimeZone);
@@ -109,6 +117,14 @@ public class CalDAVCalendar extends BaseCalendar {
                     }
                     if (vEvent.getLocation() != null) {
                         event.setLocation(vEvent.getLocation().getValue());
+                    }
+                    for (Object prop : vEvent.getProperties()) {
+                        if (prop instanceof Attendee) {
+                            DSAGuest guest = new DSAGuest();
+                            guest.setDisplayName(((Attendee) prop).getName());
+                            guest.setEmail(((Attendee) prop).getValue());
+                            event.getGuests().add(guest);
+                        }
                     }
                     event.setTimeZone(timeZone);
                     events.add(event);
