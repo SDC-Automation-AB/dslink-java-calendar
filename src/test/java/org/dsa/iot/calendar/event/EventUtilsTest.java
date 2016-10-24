@@ -22,7 +22,7 @@ public class EventUtilsTest {
     private Instant startOfEvent;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         EventUtils.clock = clock;
         startOfEvent = Instant.now(clock);
     }
