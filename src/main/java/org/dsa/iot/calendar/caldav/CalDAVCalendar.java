@@ -102,18 +102,17 @@ public class CalDAVCalendar extends BaseCalendar {
                     if (vEvent.getUid() == null || vEvent.getSummary() == null) {
                         continue;
                     }
+                    if (vEvent.getStartDate() == null || vEvent.getEndDate() == null) {
+                        throw new IllegalArgumentException("Start or end date can not be null.");
+                    }
                     DSAEvent event = new DSAEvent(
-                            vEvent.getSummary().getValue()
+                            vEvent.getSummary().getValue(),
+                            vEvent.getStartDate().getDate().toInstant(),
+                            vEvent.getEndDate().getDate().toInstant()
                     );
                     event.setUniqueId(vEvent.getUid().getValue());
                     if (vEvent.getDescription() != null) {
                         event.setDescription(vEvent.getDescription().getValue());
-                    }
-                    if (vEvent.getStartDate() != null) {
-                        event.setStart(vEvent.getStartDate().getDate().toInstant());
-                    }
-                    if (vEvent.getEndDate() != null) {
-                        event.setEnd(vEvent.getEndDate().getDate().toInstant());
                     }
                     if (vEvent.getLocation() != null) {
                         event.setLocation(vEvent.getLocation().getValue());

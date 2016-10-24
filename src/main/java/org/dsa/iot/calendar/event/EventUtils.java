@@ -12,7 +12,8 @@ public class EventUtils {
             Instant now = Instant.now(clock);
             return new TimeRange(now, now.plus(duration));
         }
-        return null;
+        Instant end = events.get(0).getEnd();
+        return new TimeRange(end, end.plus(duration));
     }
 
     public static Date localDateToDate(LocalDate localDate) {

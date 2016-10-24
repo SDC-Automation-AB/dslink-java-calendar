@@ -25,8 +25,10 @@ public class DSAEvent {
 
     protected Clock clock;
 
-    public DSAEvent(String title) {
+    public DSAEvent(String title, Instant start, Instant end) {
         this.title = title;
+        this.start = start;
+        this.end = end;
         timeZone = TimeZone.getDefault().getID();
         guests = new ArrayList<>();
         clock = Clock.systemDefaultZone();

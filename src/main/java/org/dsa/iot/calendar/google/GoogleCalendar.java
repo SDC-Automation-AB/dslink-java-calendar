@@ -24,6 +24,7 @@ import org.dsa.iot.dslink.node.value.ValueType;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -173,25 +174,28 @@ public class GoogleCalendar extends BaseCalendar {
             CalendarList calendarList = calendar.calendarList().list().execute();
             for (CalendarListEntry listEntry : calendarList.getItems()) {
                 for (Event event : calendar.events().list(listEntry.getId()).execute().getItems()) {
-                    DSAEvent dsaEvent = new DSAEvent(event.getSummary());
+                    EventDateTime eventStart = event.getStart();
+                    if (eventStart == null || eventStart.getDate() == null || eventStart.getDateTime() == null) {
+                        throw new IllegalArgumentException("Start date can not be null.");
+                    }
+                    EventDateTime eventEnd = event.getEnd();
+                    if (eventEnd == null || eventEnd.getDate() == null || eventEnd.getDateTime() == null) {
+                        throw new IllegalArgumentException("End date can not be null.");
+                    }
+
+                    // TODO: Check logic
+                    Instant start = new Date((eventStart.getDate() != null)
+                            ? eventStart.getDate().getValue()
+                            : eventStart.getDateTime().getValue()).toInstant();
+                    Instant end = new Date((eventEnd.getDate() != null)
+                            ? eventEnd.getDate().getValue()
+                            : eventEnd.getDateTime().getValue()).toInstant();
+
+                    DSAEvent dsaEvent = new DSAEvent(event.getSummary(), start, end);
                     dsaEvent.setUniqueId(event.getId());
                     dsaEvent.setDescription(event.getDescription());
                     dsaEvent.setLocation(event.getLocation());
                     dsaEvent.setCalendar(new DSAIdentifier(listEntry.getId(), listEntry.getSummary()));
-                    if (event.getStart() != null) {
-                        if (event.getStart().getDate() != null) {
-                            dsaEvent.setStart(new Date(event.getStart().getDate().getValue()).toInstant());
-                        } else if (event.getStart().getDateTime() != null) {
-                            dsaEvent.setStart(new Date(event.getStart().getDateTime().getValue()).toInstant());
-                        }
-                    }
-                    if (event.getEnd() != null) {
-                        if (event.getEnd().getDate() != null) {
-                            dsaEvent.setEnd(new Date(event.getEnd().getDate().getValue()).toInstant());
-                        } else if (event.getEnd().getDateTime() != null) {
-                            dsaEvent.setEnd(new Date(event.getEnd().getDateTime().getValue()).toInstant());
-                        }
-                    }
                     if (event.getAttendees() != null) {
                         for (EventAttendee attendee : event.getAttendees()) {
                             DSAGuest guest = new DSAGuest();

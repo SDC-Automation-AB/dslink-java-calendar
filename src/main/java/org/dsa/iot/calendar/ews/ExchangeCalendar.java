@@ -177,14 +177,12 @@ public class ExchangeCalendar extends BaseCalendar {
 
         for (Appointment appointment : results) {
             try {
-                DSAEvent event = new DSAEvent(appointment.getSubject());
+                DSAEvent event = new DSAEvent(appointment.getSubject(), appointment.getStart().toInstant(), appointment.getEnd().toInstant());
                 try {
                     event.setDescription(appointment.getBody().toString());
                 } catch (ServiceLocalException e) {
                     event.setDescription("");
                 }
-                event.setStart(appointment.getStart().toInstant());
-                event.setEnd(appointment.getEnd().toInstant());
                 event.setLocation(appointment.getLocation());
                 for (Attendee attendee : appointment.getRequiredAttendees()) {
                     event.getGuests().add(exchangeToDSAGuest(attendee));

@@ -337,8 +337,6 @@ public class Actions {
                 if (title != null && !title.isEmpty()) {
                     String desc = actionResult.getParameter("desc", new Value("")).getString();
                     String timeRange = actionResult.getParameter("timeRange").getString();
-                    DSAEvent event = new DSAEvent(title);
-                    event.setDescription(desc);
                     try {
                         String[] dates = timeRange.split("/", 2);
                         if (dates.length != 2) {
@@ -346,9 +344,9 @@ public class Actions {
                         }
                         Date startDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[0]);
                         Date endDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[1]);
+                        DSAEvent event = new DSAEvent(title, startDate.toInstant(), endDate.toInstant());
+                        event.setDescription(desc);
                         String location = actionResult.getParameter("location", new Value("")).getString();
-                        event.setStart(startDate.toInstant());
-                        event.setEnd(endDate.toInstant());
                         event.setLocation(location);
                         if (calendar.supportsMultipleCalendars()) {
                             String calendar1 = actionResult.getParameter("calendar").getString();
@@ -391,8 +389,6 @@ public class Actions {
                     String desc = actionResult.getParameter("desc", new Value("")).getString();
                     String timeRange = actionResult.getParameter("timeRange").getString();
                     String location = actionResult.getParameter("location", new Value("")).getString();
-                    DSAEvent event = new DSAEvent(title);
-                    event.setDescription(desc);
                     try {
                         String[] dates = timeRange.split("/", 2);
                         if (dates.length != 2) {
@@ -400,8 +396,8 @@ public class Actions {
                         }
                         Date startDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[0]);
                         Date endDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[1]);
-                        event.setStart(startDate.toInstant());
-                        event.setEnd(endDate.toInstant());
+                        DSAEvent event = new DSAEvent(title, startDate.toInstant(), endDate.toInstant());
+                        event.setDescription(desc);
                         event.setLocation(location);
                         Node editEventNode = actionResult.getNode().getParent();
                         editEventNode.setDisplayName(title);
