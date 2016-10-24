@@ -4,19 +4,22 @@ import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.time.*;
-import java.time.temporal.ChronoUnit;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.time.temporal.ChronoUnit.HOURS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class EventUtilsTest {
-    public static final Duration wantedDuration = Duration.of(10, ChronoUnit.HOURS);
-    public static final String TITLE = "jlkfdsjalk";
+    private static final Duration wantedDuration = Duration.of(2, HOURS);
+    private static final String TITLE = "jlkfdsjalk";
     private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
+    private final Duration eventDuration = Duration.of(1, HOURS);
     private Instant startOfEvent;
-    private final Duration eventDuration = Duration.of(1, ChronoUnit.HOURS);
 
     @Before
     public void setUp() throws Exception {
@@ -38,6 +41,19 @@ public class EventUtilsTest {
         Instant endOfEvent = startOfEvent.plus(eventDuration);
         TimeRange expectedResult = new TimeRange(endOfEvent, endOfEvent.plus(wantedDuration));
         List<DSAEvent> events = Lists.newArrayList(new DSAEvent(TITLE, startOfEvent, startOfEvent.plus(eventDuration)));
+
+        TimeRange timeRange = EventUtils.findNextFreeTimeRange(events, wantedDuration);
+
+        assertThat(timeRange).isEqualTo(expectedResult);
+    }
+
+    @Test
+    public void when_only_one_event_and_its_over() {
+        Instant now = Instant.now(clock);
+        Instant startOfEvent = now.minus(10, HOURS);
+        Instant endOfEvent = now.minus(1, HOURS);
+        TimeRange expectedResult = new TimeRange(now, now.plus(wantedDuration));
+        List<DSAEvent> events = Lists.newArrayList(new DSAEvent(TITLE, startOfEvent, endOfEvent));
 
         TimeRange timeRange = EventUtils.findNextFreeTimeRange(events, wantedDuration);
 

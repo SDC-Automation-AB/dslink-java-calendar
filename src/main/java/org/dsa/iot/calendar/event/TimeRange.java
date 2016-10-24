@@ -36,4 +36,22 @@ public class TimeRange {
                 ", end=" + end +
                 '}';
     }
+
+    public static boolean isOverlap(TimeRange t1, TimeRange t2) {
+        if (rangeIsSame(t1, t2)) {
+            return true;
+        }
+
+        return t1.isIncludedIn(t2) || t2.isIncludedIn(t1);
+
+    }
+
+    private boolean isIncludedIn(TimeRange other) {
+        return (start.equals(other.start) || start.isAfter(other.start))
+                && (end.equals(other.end) || end.isBefore(other.end));
+    }
+
+    private static boolean rangeIsSame(TimeRange t1, TimeRange t2) {
+        return t1.start.equals(t2.start) && t1.end.equals(t2.end);
+    }
 }

@@ -1,19 +1,49 @@
 package org.dsa.iot.calendar.event;
 
 import java.time.*;
+import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.time.temporal.ChronoUnit.MINUTES;
+import static java.util.stream.Collectors.toList;
 
 public class EventUtils {
     protected static Clock clock = Clock.systemDefaultZone();
 
-    public static TimeRange findNextFreeTimeRange(List<DSAEvent> events, Duration duration) {
+    public static TimeRange findNextFreeTimeRange(List<DSAEvent> events, Duration wantedDuration) {
+        Instant now = Instant.now(clock);
         if (events.isEmpty()) {
-            Instant now = Instant.now(clock);
-            return new TimeRange(now, now.plus(duration));
+            return new TimeRange(now, now.plus(wantedDuration));
         }
-        Instant end = events.get(0).getEnd();
-        return new TimeRange(end, end.plus(duration));
+
+        List<DSAEvent> eventsNotOver = events
+                .stream()
+                .filter(event -> event.getEnd().isAfter(Instant.now(clock)))
+                .sorted((o1, o2) -> {
+                    if (MINUTES.between(o1.getStart(), now) > MINUTES.between(o2.getStart(), now)) {
+                        return 1;
+                    } else if (MINUTES.between(o1.getStart(), now) < MINUTES.between(o2.getStart(), now)) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                }).collect(toList());
+
+        for (int i = 0; i < events.size() - 1; ++i) {
+            DSAEvent event = events.get(i);
+
+            Duration freeRange = Duration.between(now, event.getStart());
+
+            if (wantedDuration.compareTo(freeRange) <= 0) {
+                return new TimeRange(now, now.plus(wantedDuration));
+            }
+        }
+
+        return new TimeRange(now, now.plus(wantedDuration));
     }
 
     public static Date localDateToDate(LocalDate localDate) {
