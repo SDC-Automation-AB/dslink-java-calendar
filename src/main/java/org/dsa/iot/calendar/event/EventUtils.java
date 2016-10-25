@@ -1,18 +1,17 @@
 package org.dsa.iot.calendar.event;
 
 import java.time.*;
-import java.time.temporal.ChronoUnit;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 
 public class EventUtils {
     protected static Clock clock = Clock.systemDefaultZone();
+
+    private EventUtils() {
+    }
 
     public static TimeRange findNextFreeTimeRange(List<DSAEvent> events, Duration wantedDuration) {
         Instant now = Instant.now(clock);
@@ -33,7 +32,7 @@ public class EventUtils {
                     }
                 }).collect(toList());
 
-        for (int i = 0; i < events.size() - 1; ++i) {
+        for (int i = 0; i < eventsNotOver.size() - 1; ++i) {
             DSAEvent event = events.get(i);
 
             Duration freeRange = Duration.between(now, event.getStart());

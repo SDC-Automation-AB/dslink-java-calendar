@@ -138,7 +138,6 @@ public class TimeSlotTableTest {
         assertThat(getHour(result.get(0).start)).isEqualTo(10);
         assertThat(getHour(result.get(0).end)).isEqualTo(11);
         assertThat(result).hasSize(1);
-
     }
 
     private int getHour(Instant instant) {

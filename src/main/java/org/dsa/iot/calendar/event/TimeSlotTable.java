@@ -54,7 +54,7 @@ public class TimeSlotTable {
         int previousTableSize;
         do {
             previousTableSize = table.size();
-            for (Iterator<TimeRange> it1 = table.iterator(); it1.hasNext(); ) {
+            for (Iterator<TimeRange> it1 = table.iterator(); it1.hasNext();) {
                 TimeRange range = it1.next();
                 for (TimeRange slot : table) {
                     if (range == slot) {

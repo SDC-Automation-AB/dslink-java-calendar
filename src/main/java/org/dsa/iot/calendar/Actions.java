@@ -1,9 +1,8 @@
 package org.dsa.iot.calendar;
 
 import microsoft.exchange.webservices.data.core.enumeration.misc.ExchangeVersion;
-import org.dsa.iot.calendar.event.DSAEvent;
 import org.dsa.iot.calendar.caldav.CalDAVCalendar;
-import org.dsa.iot.calendar.event.EventUtils;
+import org.dsa.iot.calendar.event.DSAEvent;
 import org.dsa.iot.calendar.ews.ExchangeCalendar;
 import org.dsa.iot.calendar.google.GoogleCalendar;
 import org.dsa.iot.dslink.node.Node;
@@ -15,15 +14,13 @@ import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.handler.Handler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
@@ -33,6 +30,8 @@ import static org.dsa.iot.calendar.CalendarHandler.CALENDARS;
 import static org.dsa.iot.calendar.event.EventUtils.localDateTimeToInstant;
 
 public class Actions {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Actions.class);
+
     private Actions() {
     }
 
@@ -218,7 +217,7 @@ public class Actions {
                         Actions.addGetCalendars(calendarNode);
                         cal.attemptAuthorize(calendarNode);
                     } catch (GeneralSecurityException | IOException e) {
-                        e.printStackTrace();
+                        LOGGER.debug(e.toString());
                     }
                 }
             });
@@ -230,65 +229,62 @@ public class Actions {
 
     public static class AddExchangeCalendar extends Action {
         AddExchangeCalendar(final Node superRoot) {
-            super(Permission.CONFIG, new Handler<ActionResult>() {
-                @Override
-                public void handle(ActionResult event) {
-                    String desc = "";
-                    String email = "";
-                    String password = "";
-                    boolean autoDiscover = true;
-                    String url = "";
-                    String vers = "2010 SP2";
-                    ExchangeVersion version = ExchangeVersion.Exchange2010_SP2;
+            super(Permission.CONFIG, event -> {
+                String desc = "";
+                String email = "";
+                String password = "";
+                boolean autoDiscover = true;
+                String url = "";
+                String vers = "2010 SP2";
+                ExchangeVersion version = ExchangeVersion.Exchange2010_SP2;
 
-                    if (event.getParameter("desc") != null) {
-                        desc = event.getParameter("desc").getString();
-                    }
-                    if (event.getParameter("version") != null) {
-                        vers = event.getParameter("version").getString();
-                        version = parseExchangeVersion(vers);
-                    }
-                    if (event.getParameter("email") != null) {
-                        email = event.getParameter("email").getString();
-                    }
-                    if (event.getParameter("password") != null) {
-                        password = event.getParameter("password").getString();
-                    }
-                    if (event.getParameter("autoDiscoverUrl") != null) {
-                        autoDiscover = event.getParameter("autoDiscoverUrl").getBool();
-                    }
-                    if (event.getParameter("url") != null) {
-                        url = event.getParameter("url").getString();
-                    }
-
-                    NodeBuilder calendarBuilder = superRoot.createChild(desc);
-                    calendarBuilder.setAttribute("type", new Value("exchange"));
-                    calendarBuilder.setRoConfig("version", new Value(vers));
-                    calendarBuilder.setRoConfig("email", new Value(email));
-                    calendarBuilder.setPassword(password.toCharArray());
-                    calendarBuilder.setRoConfig("autoDiscoverUrl", new Value(autoDiscover));
-                    calendarBuilder.setRoConfig("url", new Value(url));
-                    Node calendarNode = calendarBuilder.build();
-
-                    NodeBuilder eventsBuilder = calendarNode.createChild("events");
-                    eventsBuilder.setDisplayName("Events");
-                    eventsBuilder.build();
-
-                    ExchangeCalendar cal;
-                    if (autoDiscover) {
-                        cal = new ExchangeCalendar(calendarNode, version, email, password);
-                    } else {
-                        cal = new ExchangeCalendar(calendarNode, version, email, password, url);
-                    }
-
-                    CALENDARS.put(desc, cal);
-
-                    Actions.addCreateEventNode(calendarNode);
-                    Actions.addRemoveCalendarNode(calendarNode);
-                    Actions.addRefreshCalendarNode(calendarNode);
-
-                    cal.startUpdateLoop();
+                if (event.getParameter("desc") != null) {
+                    desc = event.getParameter("desc").getString();
                 }
+                if (event.getParameter("version") != null) {
+                    vers = event.getParameter("version").getString();
+                    version = parseExchangeVersion(vers);
+                }
+                if (event.getParameter("email") != null) {
+                    email = event.getParameter("email").getString();
+                }
+                if (event.getParameter("password") != null) {
+                    password = event.getParameter("password").getString();
+                }
+                if (event.getParameter("autoDiscoverUrl") != null) {
+                    autoDiscover = event.getParameter("autoDiscoverUrl").getBool();
+                }
+                if (event.getParameter("url") != null) {
+                    url = event.getParameter("url").getString();
+                }
+
+                NodeBuilder calendarBuilder = superRoot.createChild(desc);
+                calendarBuilder.setAttribute("type", new Value("exchange"));
+                calendarBuilder.setRoConfig("version", new Value(vers));
+                calendarBuilder.setRoConfig("email", new Value(email));
+                calendarBuilder.setPassword(password.toCharArray());
+                calendarBuilder.setRoConfig("autoDiscoverUrl", new Value(autoDiscover));
+                calendarBuilder.setRoConfig("url", new Value(url));
+                Node calendarNode = calendarBuilder.build();
+
+                NodeBuilder eventsBuilder = calendarNode.createChild("events");
+                eventsBuilder.setDisplayName("Events");
+                eventsBuilder.build();
+
+                ExchangeCalendar cal;
+                if (autoDiscover) {
+                    cal = new ExchangeCalendar(calendarNode, version, email, password);
+                } else {
+                    cal = new ExchangeCalendar(calendarNode, version, email, password, url);
+                }
+
+                CALENDARS.put(desc, cal);
+
+                Actions.addCreateEventNode(calendarNode);
+                Actions.addRemoveCalendarNode(calendarNode);
+                Actions.addRefreshCalendarNode(calendarNode);
+
+                cal.startUpdateLoop();
             });
             addParameter(new Parameter("desc", ValueType.STRING));
             addParameter(new Parameter("version", ValueType.makeEnum("2007 SP1", "2010", "2010 SP1", "2010 SP2"), new Value("2010 SP2")));
@@ -358,7 +354,7 @@ public class Actions {
                         calendar.createEvent(event);
                         actionResult.getTable().addRow(Row.make(new Value("Event created.")));
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        LOGGER.debug(e.toString());
                         actionResult.getTable().addRow(Row.make(new Value("Error occurred: " + e.getMessage())));
                     }
                 }
@@ -414,7 +410,7 @@ public class Actions {
                         calendar.createEvent(event);
                         actionResult.getTable().addRow(Row.make(new Value(true)));
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        LOGGER.debug(e.toString());
                         actionResult.getTable().addRow(Row.make(new Value(false)));
                     }
                 }

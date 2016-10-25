@@ -36,7 +36,7 @@ dependencies {
 
     // Exchange Web Services Support
     compile 'com.microsoft.ews-java-api:ews-java-api:2.0'
-    compile group: 'junit', name: 'junit', version: '4.12'
+    compile 'junit:junit:4.12'
     testCompile 'org.assertj:assertj-core:3.5.2'
 }
 
