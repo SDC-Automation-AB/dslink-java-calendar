@@ -51,7 +51,6 @@ public class TimeRange {
         }
 
         return false;
-
     }
 
     private static boolean partiallyOverlap(TimeRange t1, TimeRange t2) {
