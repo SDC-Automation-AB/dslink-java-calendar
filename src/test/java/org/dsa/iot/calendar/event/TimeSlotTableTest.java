@@ -109,6 +109,38 @@ public class TimeSlotTableTest {
         assertThat(result).hasSize(1);
     }
 
+    @Test
+    public void mergeSlot_multipleMerge_afterInsert() {
+        TimeRange timeRange1 = new TimeRange(getInstantFromString("2016-10-24T10:00"), getInstantFromString("2016-10-24T11:00"));
+        TimeRange timeRange2 = new TimeRange(getInstantFromString("2016-10-24T12:00"), getInstantFromString("2016-10-24T13:00"));
+        TimeRange timeRange3 = new TimeRange(getInstantFromString("2016-10-24T14:00"), getInstantFromString("2016-10-24T15:00"));
+        TimeRange timeRange4 = new TimeRange(getInstantFromString("2016-10-24T10:30"), getInstantFromString("2016-10-24T14:30"));
+
+        timeSlotTable.mergeSlot(timeRange1);
+        timeSlotTable.mergeSlot(timeRange2);
+        timeSlotTable.mergeSlot(timeRange3);
+        timeSlotTable.mergeSlot(timeRange4);
+
+        List<TimeRange> result = timeSlotTable.getTable();
+        assertThat(getHour(result.get(0).start)).isEqualTo(10);
+        assertThat(getHour(result.get(0).end)).isEqualTo(15);
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    public void mergeSlot_doesntMergeAnything_whenTimeRangeAlreadyExists() {
+        TimeRange timeRange = new TimeRange(getInstantFromString("2016-10-24T10:00"), getInstantFromString("2016-10-24T11:00"));
+
+        timeSlotTable.mergeSlot(timeRange);
+        timeSlotTable.mergeSlot(timeRange);
+
+        List<TimeRange> result = timeSlotTable.getTable();
+        assertThat(getHour(result.get(0).start)).isEqualTo(10);
+        assertThat(getHour(result.get(0).end)).isEqualTo(11);
+        assertThat(result).hasSize(1);
+
+    }
+
     private int getHour(Instant instant) {
         return instant.atZone(ZoneId.systemDefault()).getHour();
     }

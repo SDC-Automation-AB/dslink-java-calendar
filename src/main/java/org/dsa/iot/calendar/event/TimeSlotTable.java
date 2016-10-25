@@ -16,6 +16,10 @@ public class TimeSlotTable {
             return;
         }
 
+        if (table.contains(toMerge)) {
+            return;
+        }
+
         boolean wasAdded = false;
         for (TimeRange slot : table) {
             if (TimeRange.areOverlapping(toMerge, slot)) {
@@ -42,7 +46,6 @@ public class TimeSlotTable {
         }
 
         table.sort(Comparator.comparing(o -> o.start));
-
         stabilizeTable();
     }
 
