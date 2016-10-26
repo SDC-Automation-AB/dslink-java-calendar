@@ -69,18 +69,15 @@ public class EventUtilsTest {
     @Test
     public void after_two_contiguous_events_when_one_is_currently_active() {
         Instant now = Instant.now(clock);
-
         List<DSAEvent> events = Lists.newArrayList(
                 new DSAEvent(TITLE, now.minus(1, HOURS), now.plus(1, HOURS)),
                 new DSAEvent(TITLE, now.plus(1, HOURS), now.plus(2, HOURS))
         );
-
         TimeRange expectedResult = new TimeRange(now.plus(2, HOURS), now.plus(5, HOURS));
 
         TimeRange result = EventUtils.findNextFreeTimeRange(events, Duration.of(3, HOURS));
 
         assertThat(result).isEqualTo(expectedResult);
-
     }
 
     /**
