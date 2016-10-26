@@ -59,4 +59,67 @@ public class EventUtilsTest {
 
         assertThat(timeRange).isEqualTo(expectedResult);
     }
+
+    /**
+     * * = now
+     * | = beginning/end of event
+     * - = 30 minutes
+     * |-*-|--|FREE
+     */
+    @Test
+    public void after_two_contiguous_events_when_one_is_currently_active() {
+        Instant now = Instant.now(clock);
+
+        List<DSAEvent> events = Lists.newArrayList(
+                new DSAEvent(TITLE, now.minus(1, HOURS), now.plus(1, HOURS)),
+                new DSAEvent(TITLE, now.plus(1, HOURS), now.plus(2, HOURS))
+        );
+
+        TimeRange expectedResult = new TimeRange(now.plus(2, HOURS), now.plus(5, HOURS));
+
+        TimeRange result = EventUtils.findNextFreeTimeRange(events, Duration.of(3, HOURS));
+
+        assertThat(result).isEqualTo(expectedResult);
+
+    }
+
+    /**
+     * |-*-|3 hours free|--|
+     */
+    @Test
+    public void free_time_between_events() {
+        Instant now = Instant.now(clock);
+
+        List<DSAEvent> events = Lists.newArrayList(
+                new DSAEvent(TITLE, now.minus(1, HOURS), now.plus(1, HOURS)),
+                new DSAEvent(TITLE, now.plus(4, HOURS), now.plus(5, HOURS))
+        );
+
+        TimeRange expectedResult = new TimeRange(now.plus(1, HOURS), now.plus(4, HOURS));
+
+        TimeRange result = EventUtils.findNextFreeTimeRange(events, Duration.of(3, HOURS));
+
+        assertThat(result).isEqualTo(expectedResult);
+    }
+
+    /**
+     * |-*-|2 Hours free|--|3 hours free|--|
+     */
+    @Test
+    public void first_free_time_between_events_not_big_enough() {
+        Instant now = Instant.now(clock);
+
+        List<DSAEvent> events = Lists.newArrayList(
+                new DSAEvent(TITLE, now.minus(1, HOURS), now.plus(1, HOURS)),
+                new DSAEvent(TITLE, now.plus(3, HOURS), now.plus(4, HOURS)),
+                new DSAEvent(TITLE, now.plus(7, HOURS), now.plus(8, HOURS))
+
+        );
+
+        TimeRange expectedResult = new TimeRange(now.plus(4, HOURS), now.plus(7, HOURS));
+
+        TimeRange result = EventUtils.findNextFreeTimeRange(events, Duration.of(3, HOURS));
+
+        assertThat(result).isEqualTo(expectedResult);
+    }
 }

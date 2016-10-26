@@ -8,12 +8,18 @@ public class TimeRange {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         TimeRange timeRange = (TimeRange) o;
 
-        if (start != null ? !start.equals(timeRange.start) : timeRange.start != null) return false;
+        if (start != null ? !start.equals(timeRange.start) : timeRange.start != null) {
+            return false;
+        }
         return end != null ? end.equals(timeRange.end) : timeRange.end == null;
     }
 
@@ -31,10 +37,12 @@ public class TimeRange {
 
     @Override
     public String toString() {
-        return "TimeRange{" +
-                "start=" + start +
-                ", end=" + end +
-                '}';
+        return "TimeRange{"
+                + "start="
+                + start
+                + ", end="
+                + end
+                + '}';
     }
 
     public static boolean areOverlapping(TimeRange t1, TimeRange t2) {

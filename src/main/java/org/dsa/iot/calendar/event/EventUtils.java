@@ -1,7 +1,6 @@
 package org.dsa.iot.calendar.event;
 
 import java.time.*;
-import java.util.Date;
 import java.util.List;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -32,21 +31,29 @@ public class EventUtils {
                     }
                 }).collect(toList());
 
-        for (int i = 0; i < eventsNotOver.size() - 1; ++i) {
-            DSAEvent event = events.get(i);
+        TimeSlotTable timeSlots = new TimeSlotTable();
+        for (DSAEvent event : eventsNotOver) {
+            timeSlots.mergeSlot(new TimeRange(event.getStart(), event.getEnd()));
+        }
 
-            Duration freeRange = Duration.between(now, event.getStart());
+        List<TimeRange> table = timeSlots.getTable();
 
-            if (wantedDuration.compareTo(freeRange) <= 0) {
-                return new TimeRange(now, now.plus(wantedDuration));
+        for (int i = 0; i < table.size(); ++i) {
+            TimeRange current = table.get(i);
+            if (i == table.size() - 1) {
+                return new TimeRange(current.end, current.end.plus(wantedDuration));
+            }
+            TimeRange next = table.get(i + 1);
+
+            Instant endOfFreeSpace = current.end.plus(wantedDuration);
+            if (endOfFreeSpace.compareTo(next.start) > 0) {
+                continue;
+            } else {
+                return new TimeRange(current.end, endOfFreeSpace);
             }
         }
 
         return new TimeRange(now, now.plus(wantedDuration));
-    }
-
-    public static Date localDateToDate(LocalDate localDate) {
-        return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
     }
 
     // TODO: We needn't to assume the timezone from DGLux https://github.com/IOT-DSA/dslink-java-calendar/issues/15
