@@ -112,4 +112,21 @@ public class EventUtilsTest {
 
         assertThat(result).isEqualTo(expectedResult);
     }
+
+    /**
+     * |3 hours free|--|3 Hours free|--|
+     */
+    @Test
+    public void first_free_time_before_all_events() {
+        TimeRange expectedResult = new TimeRange(now, now.plus(3, HOURS));
+        List<DSAEvent> events = Lists.newArrayList(
+                new DSAEvent(TITLE, now.plus(3, HOURS), now.plus(4, HOURS)),
+                new DSAEvent(TITLE, now.plus(7, HOURS), now.plus(8, HOURS))
+
+        );
+
+        TimeRange result = EventUtils.findNextFreeTimeRange(events, Duration.of(3, HOURS));
+
+        assertThat(result).isEqualTo(expectedResult);
+    }
 }

@@ -40,6 +40,11 @@ public class EventUtils {
 
         for (int i = 0; i < table.size(); ++i) {
             TimeRange current = table.get(i);
+
+            if (i == 0 && now.plus(wantedDuration).compareTo(current.start) <= 0) {
+                    return new TimeRange(now, current.start);
+            }
+
             if (i == table.size() - 1) {
                 return new TimeRange(current.end, current.end.plus(wantedDuration));
             }
