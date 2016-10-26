@@ -41,24 +41,29 @@ public class EventUtils {
         for (int i = 0; i < table.size(); ++i) {
             TimeRange current = table.get(i);
 
-            if (i == 0 && now.plus(wantedDuration).compareTo(current.start) <= 0) {
-                    return new TimeRange(now, current.start);
+            if (i == 0 && hasEnoughFreeTimeInRange(now, current.start, wantedDuration)) {
+                return new TimeRange(now, current.start);
             }
 
-            if (i == table.size() - 1) {
+            if (isLastEventOfTable(table, i)) {
                 return new TimeRange(current.end, current.end.plus(wantedDuration));
             }
-            TimeRange next = table.get(i + 1);
 
-            Instant endOfFreeSpace = current.end.plus(wantedDuration);
-            if (endOfFreeSpace.compareTo(next.start) > 0) {
-                continue;
-            } else {
-                return new TimeRange(current.end, endOfFreeSpace);
+            TimeRange next = table.get(i + 1);
+            if (hasEnoughFreeTimeInRange(current.end, next.start, wantedDuration)) {
+                return new TimeRange(current.end, current.end.plus(wantedDuration));
             }
         }
 
         return new TimeRange(now, now.plus(wantedDuration));
+    }
+
+    private static boolean isLastEventOfTable(List<TimeRange> table, int i) {
+        return i == table.size() - 1;
+    }
+
+    private static boolean hasEnoughFreeTimeInRange(Instant from, Instant to, Duration wantedDuration) {
+        return from.plus(wantedDuration).compareTo(to) <= 0;
     }
 
     // TODO: We needn't to assume the timezone from DGLux https://github.com/IOT-DSA/dslink-java-calendar/issues/15
