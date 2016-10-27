@@ -1,7 +1,6 @@
 package org.dsa.iot.calendar.event;
 
 import java.time.*;
-import java.util.Date;
 import java.util.List;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -32,21 +31,39 @@ public class EventUtils {
                     }
                 }).collect(toList());
 
-        for (int i = 0; i < eventsNotOver.size() - 1; ++i) {
-            DSAEvent event = events.get(i);
+        TimeSlotTable timeSlots = new TimeSlotTable();
+        for (DSAEvent event : eventsNotOver) {
+            timeSlots.mergeSlot(new TimeRange(event.getStart(), event.getEnd()));
+        }
 
-            Duration freeRange = Duration.between(now, event.getStart());
+        List<TimeRange> table = timeSlots.getTable();
 
-            if (wantedDuration.compareTo(freeRange) <= 0) {
-                return new TimeRange(now, now.plus(wantedDuration));
+        for (int i = 0; i < table.size(); ++i) {
+            TimeRange current = table.get(i);
+
+            if (i == 0 && hasEnoughFreeTimeInRange(now, current.start, wantedDuration)) {
+                return new TimeRange(now, current.start);
+            }
+
+            if (isLastEventOfTable(table, i)) {
+                return new TimeRange(current.end, current.end.plus(wantedDuration));
+            }
+
+            TimeRange next = table.get(i + 1);
+            if (hasEnoughFreeTimeInRange(current.end, next.start, wantedDuration)) {
+                return new TimeRange(current.end, current.end.plus(wantedDuration));
             }
         }
 
         return new TimeRange(now, now.plus(wantedDuration));
     }
 
-    public static Date localDateToDate(LocalDate localDate) {
-        return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+    private static boolean isLastEventOfTable(List<TimeRange> table, int i) {
+        return i == table.size() - 1;
+    }
+
+    private static boolean hasEnoughFreeTimeInRange(Instant from, Instant to, Duration wantedDuration) {
+        return from.plus(wantedDuration).compareTo(to) <= 0;
     }
 
     // TODO: We needn't to assume the timezone from DGLux https://github.com/IOT-DSA/dslink-java-calendar/issues/15

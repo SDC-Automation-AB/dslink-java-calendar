@@ -19,6 +19,7 @@ public class EventUtilsTest {
     private static final String TITLE = "jlkfdsjalk";
     private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
     private final Duration eventDuration = Duration.of(1, HOURS);
+    private final Instant now = Instant.now(clock);
     private Instant startOfEvent;
 
     @Before
@@ -49,7 +50,6 @@ public class EventUtilsTest {
 
     @Test
     public void when_only_one_event_and_its_over() {
-        Instant now = Instant.now(clock);
         Instant startOfEvent = now.minus(10, HOURS);
         Instant endOfEvent = now.minus(1, HOURS);
         TimeRange expectedResult = new TimeRange(now, now.plus(wantedDuration));
@@ -58,5 +58,75 @@ public class EventUtilsTest {
         TimeRange timeRange = EventUtils.findNextFreeTimeRange(events, wantedDuration);
 
         assertThat(timeRange).isEqualTo(expectedResult);
+    }
+
+    /**
+     * * = now
+     * | = beginning/end of event
+     * - = 30 minutes
+     * |-*-|--|FREE
+     */
+    @Test
+    public void after_two_contiguous_events_when_one_is_currently_active() {
+        TimeRange expectedResult = new TimeRange(now.plus(2, HOURS), now.plus(5, HOURS));
+        List<DSAEvent> events = Lists.newArrayList(
+                new DSAEvent(TITLE, now.minus(1, HOURS), now.plus(1, HOURS)),
+                new DSAEvent(TITLE, now.plus(1, HOURS), now.plus(2, HOURS))
+        );
+
+        TimeRange result = EventUtils.findNextFreeTimeRange(events, Duration.of(3, HOURS));
+
+        assertThat(result).isEqualTo(expectedResult);
+    }
+
+    /**
+     * |-*-|3 hours free|--|
+     */
+    @Test
+    public void free_time_between_events() {
+        TimeRange expectedResult = new TimeRange(now.plus(1, HOURS), now.plus(4, HOURS));
+        List<DSAEvent> events = Lists.newArrayList(
+                new DSAEvent(TITLE, now.minus(1, HOURS), now.plus(1, HOURS)),
+                new DSAEvent(TITLE, now.plus(4, HOURS), now.plus(5, HOURS))
+        );
+
+        TimeRange result = EventUtils.findNextFreeTimeRange(events, Duration.of(3, HOURS));
+
+        assertThat(result).isEqualTo(expectedResult);
+    }
+
+    /**
+     * |-*-|2 Hours free|--|3 hours free|--|
+     */
+    @Test
+    public void first_free_time_between_events_not_big_enough() {
+        TimeRange expectedResult = new TimeRange(now.plus(4, HOURS), now.plus(7, HOURS));
+        List<DSAEvent> events = Lists.newArrayList(
+                new DSAEvent(TITLE, now.minus(1, HOURS), now.plus(1, HOURS)),
+                new DSAEvent(TITLE, now.plus(3, HOURS), now.plus(4, HOURS)),
+                new DSAEvent(TITLE, now.plus(7, HOURS), now.plus(8, HOURS))
+
+        );
+
+        TimeRange result = EventUtils.findNextFreeTimeRange(events, Duration.of(3, HOURS));
+
+        assertThat(result).isEqualTo(expectedResult);
+    }
+
+    /**
+     * |3 hours free|--|3 Hours free|--|
+     */
+    @Test
+    public void first_free_time_before_all_events() {
+        TimeRange expectedResult = new TimeRange(now, now.plus(3, HOURS));
+        List<DSAEvent> events = Lists.newArrayList(
+                new DSAEvent(TITLE, now.plus(3, HOURS), now.plus(4, HOURS)),
+                new DSAEvent(TITLE, now.plus(7, HOURS), now.plus(8, HOURS))
+
+        );
+
+        TimeRange result = EventUtils.findNextFreeTimeRange(events, Duration.of(3, HOURS));
+
+        assertThat(result).isEqualTo(expectedResult);
     }
 }
