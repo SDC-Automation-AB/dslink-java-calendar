@@ -1,4 +1,4 @@
-package org.dsa.iot.calendar.abstractions;
+package org.dsa.iot.calendar;
 
 public class DSAIdentifier {
     private final String uid;

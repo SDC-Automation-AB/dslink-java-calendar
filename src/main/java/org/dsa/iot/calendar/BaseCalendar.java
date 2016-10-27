@@ -1,18 +1,24 @@
-package org.dsa.iot.calendar.abstractions;
+package org.dsa.iot.calendar;
 
-import org.dsa.iot.calendar.Actions;
+import org.dsa.iot.calendar.event.DSAEvent;
+import org.dsa.iot.calendar.guest.DSAGuest;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.provider.LoopProvider;
 
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public abstract class BaseCalendar {
     public static final String DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
+
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(DATE_PATTERN);
 
     private static final int UPDATE_LOOP_DELAY = 30;
 
@@ -32,7 +38,7 @@ public abstract class BaseCalendar {
      * @param end End time
      * @return List of strings to unique ids.
      */
-    public List<DSAEvent> getEventsInRange(Date start, Date end) {
+    public List<DSAEvent> getEventsInRange(Instant start, Instant end) {
         List<DSAEvent> events = getEvents();
         List<DSAEvent> newEvents = new ArrayList<>();
 
@@ -46,12 +52,7 @@ public abstract class BaseCalendar {
     }
 
     public void startUpdateLoop() {
-        LoopProvider.getProvider().schedulePeriodic(new Runnable() {
-            @Override
-            public void run() {
-                updateCalendar();
-            }
-        }, 0, UPDATE_LOOP_DELAY, TimeUnit.SECONDS);
+        LoopProvider.getProvider().schedulePeriodic(this::updateCalendar, 0, UPDATE_LOOP_DELAY, TimeUnit.SECONDS);
     }
 
     public boolean supportsMultipleCalendars() {
@@ -102,8 +103,8 @@ public abstract class BaseCalendar {
                 .build();
         String title = event.getTitle();
         String description = event.getDescription();
-        Date startString = event.getStart();
-        Date endString = event.getEnd();
+        Instant start = event.getStart();
+        Instant end = event.getEnd();
         String timeZone = event.getTimeZone();
         String location = event.getLocation();
         DSAIdentifier calendarIdentifier = event.getCalendar();
@@ -114,11 +115,11 @@ public abstract class BaseCalendar {
         if (description != null && eventNode.hasChild("description")) {
             eventNode.getChild("description").setValue(new Value(description));
         }
-        if (startString != null && eventNode.hasChild("start")) {
-            eventNode.getChild("start").setValue(new Value(new SimpleDateFormat(DATE_PATTERN).format(startString)));
+        if (eventNode.hasChild("start")) {
+            eventNode.getChild("start").setValue(new Value(dateTimeFormatter.format(start)));
         }
-        if (endString != null && eventNode.hasChild("end")) {
-            eventNode.getChild("end").setValue(new Value(new SimpleDateFormat(DATE_PATTERN).format(endString)));
+        if (eventNode.hasChild("end")) {
+            eventNode.getChild("end").setValue(new Value(dateTimeFormatter.format(end)));
         }
         if (timeZone != null && eventNode.hasChild("timeZone")) {
             eventNode.getChild("timeZone").setValue(new Value(timeZone));

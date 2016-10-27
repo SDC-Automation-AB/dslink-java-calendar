@@ -12,21 +12,23 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.*;
-import org.dsa.iot.calendar.abstractions.BaseCalendar;
-import org.dsa.iot.calendar.abstractions.DSAGuest;
-import org.dsa.iot.calendar.abstractions.DSAIdentifier;
-import org.dsa.iot.calendar.abstractions.DSAEvent;
+import org.dsa.iot.calendar.BaseCalendar;
+import org.dsa.iot.calendar.DSAIdentifier;
+import org.dsa.iot.calendar.event.DSAEvent;
+import org.dsa.iot.calendar.guest.DSAGuest;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.Writable;
 import org.dsa.iot.dslink.node.value.Value;
-import org.dsa.iot.dslink.node.value.ValuePair;
 import org.dsa.iot.dslink.node.value.ValueType;
-import org.dsa.iot.dslink.util.handler.Handler;
 
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.*;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
 import static com.google.api.client.googleapis.auth.oauth2.GoogleOAuthConstants.AUTHORIZATION_SERVER_URL;
 import static com.google.api.client.googleapis.auth.oauth2.GoogleOAuthConstants.TOKEN_SERVER_URL;
@@ -78,18 +80,15 @@ public class GoogleCalendar extends BaseCalendar {
                     .setValueType(ValueType.STRING)
                     .setWritable(Writable.CONFIG)
                     .build();
-            codeNode.getListener().setValueHandler(new Handler<ValuePair>() {
-                @Override
-                public void handle(ValuePair event) {
-                    Value value = event.getCurrent();
-                    if (value != null && value.getString() != null) {
-                        try {
-                            authorize(flow, value.getString());
-                            calendarNode.removeChild(urlNode);
-                            calendarNode.removeChild(codeNode);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+            codeNode.getListener().setValueHandler(event -> {
+                Value value = event.getCurrent();
+                if (value != null && value.getString() != null) {
+                    try {
+                        authorize(flow, value.getString());
+                        calendarNode.removeChild(urlNode);
+                        calendarNode.removeChild(codeNode);
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 }
             });
@@ -127,9 +126,9 @@ public class GoogleCalendar extends BaseCalendar {
         Event googleEvent = new Event();
         EventDateTime startEventDateTime = new EventDateTime();
         EventDateTime endEventDateTime = new EventDateTime();
-        startEventDateTime.setDateTime(new DateTime(event.getStart()));
+        startEventDateTime.setDateTime(new DateTime(Date.from(event.getStart())));
         startEventDateTime.setTimeZone("UTC");
-        endEventDateTime.setDateTime(new DateTime(event.getEnd()));
+        endEventDateTime.setDateTime(new DateTime(Date.from(event.getEnd())));
         endEventDateTime.setTimeZone("UTC");
         googleEvent.setSummary(event.getTitle());
         googleEvent.setDescription(event.getDescription());
@@ -175,25 +174,28 @@ public class GoogleCalendar extends BaseCalendar {
             CalendarList calendarList = calendar.calendarList().list().execute();
             for (CalendarListEntry listEntry : calendarList.getItems()) {
                 for (Event event : calendar.events().list(listEntry.getId()).execute().getItems()) {
-                    DSAEvent dsaEvent = new DSAEvent(event.getSummary());
+                    EventDateTime eventStart = event.getStart();
+                    if (eventStart == null || eventStart.getDate() == null || eventStart.getDateTime() == null) {
+                        throw new IllegalArgumentException("Start date can not be null.");
+                    }
+                    EventDateTime eventEnd = event.getEnd();
+                    if (eventEnd == null || eventEnd.getDate() == null || eventEnd.getDateTime() == null) {
+                        throw new IllegalArgumentException("End date can not be null.");
+                    }
+
+                    // TODO: Check logic
+                    Instant start = new Date((eventStart.getDate() != null)
+                            ? eventStart.getDate().getValue()
+                            : eventStart.getDateTime().getValue()).toInstant();
+                    Instant end = new Date((eventEnd.getDate() != null)
+                            ? eventEnd.getDate().getValue()
+                            : eventEnd.getDateTime().getValue()).toInstant();
+
+                    DSAEvent dsaEvent = new DSAEvent(event.getSummary(), start, end);
                     dsaEvent.setUniqueId(event.getId());
                     dsaEvent.setDescription(event.getDescription());
                     dsaEvent.setLocation(event.getLocation());
                     dsaEvent.setCalendar(new DSAIdentifier(listEntry.getId(), listEntry.getSummary()));
-                    if (event.getStart() != null) {
-                        if (event.getStart().getDate() != null) {
-                            dsaEvent.setStart(new Date(event.getStart().getDate().getValue()));
-                        } else if (event.getStart().getDateTime() != null) {
-                            dsaEvent.setStart(new Date(event.getStart().getDateTime().getValue()));
-                        }
-                    }
-                    if (event.getEnd() != null) {
-                        if (event.getEnd().getDate() != null) {
-                            dsaEvent.setEnd(new Date(event.getEnd().getDate().getValue()));
-                        } else if (event.getEnd().getDateTime() != null) {
-                            dsaEvent.setEnd(new Date(event.getEnd().getDateTime().getValue()));
-                        }
-                    }
                     if (event.getAttendees() != null) {
                         for (EventAttendee attendee : event.getAttendees()) {
                             DSAGuest guest = new DSAGuest();

@@ -1,4 +1,4 @@
-package org.dsa.iot.calendar.abstractions;
+package org.dsa.iot.calendar.guest;
 
 /**
  * Represents a guest that attends a meeting.

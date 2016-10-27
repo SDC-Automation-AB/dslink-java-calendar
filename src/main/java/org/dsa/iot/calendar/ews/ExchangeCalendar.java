@@ -14,9 +14,9 @@ import microsoft.exchange.webservices.data.property.complex.MessageBody;
 import microsoft.exchange.webservices.data.search.CalendarView;
 import microsoft.exchange.webservices.data.search.FindItemsResults;
 import org.dsa.iot.calendar.Actions;
-import org.dsa.iot.calendar.abstractions.BaseCalendar;
-import org.dsa.iot.calendar.abstractions.DSAEvent;
-import org.dsa.iot.calendar.abstractions.DSAGuest;
+import org.dsa.iot.calendar.BaseCalendar;
+import org.dsa.iot.calendar.event.DSAEvent;
+import org.dsa.iot.calendar.guest.DSAGuest;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.Permission;
 import org.dsa.iot.dslink.node.actions.Action;
@@ -127,8 +127,8 @@ public class ExchangeCalendar extends BaseCalendar {
             appointment = new Appointment(service);
             appointment.setSubject(event.getTitle());
             appointment.setBody(MessageBody.getMessageBodyFromText(event.getDescription()));
-            appointment.setStart(event.getStart());
-            appointment.setEnd(event.getEnd());
+            appointment.setStart(Date.from(event.getStart()));
+            appointment.setEnd(Date.from(event.getEnd()));
             appointment.setLocation(event.getLocation());
             for (DSAGuest guest : event.getGuests()) {
                 Attendee attendee = new Attendee();
@@ -177,14 +177,17 @@ public class ExchangeCalendar extends BaseCalendar {
 
         for (Appointment appointment : results) {
             try {
-                DSAEvent event = new DSAEvent(appointment.getSubject());
+                DSAEvent event = new DSAEvent(
+                        appointment.getSubject(),
+                        appointment.getStart().toInstant(),
+                        appointment.getEnd().toInstant()
+                );
+
                 try {
                     event.setDescription(appointment.getBody().toString());
                 } catch (ServiceLocalException e) {
                     event.setDescription("");
                 }
-                event.setStart(appointment.getStart());
-                event.setEnd(appointment.getEnd());
                 event.setLocation(appointment.getLocation());
                 for (Attendee attendee : appointment.getRequiredAttendees()) {
                     event.getGuests().add(exchangeToDSAGuest(attendee));

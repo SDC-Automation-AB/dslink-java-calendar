@@ -1,10 +1,8 @@
 package org.dsa.iot.calendar;
 
 import microsoft.exchange.webservices.data.core.enumeration.misc.ExchangeVersion;
-import org.dsa.iot.calendar.abstractions.BaseCalendar;
-import org.dsa.iot.calendar.abstractions.DSAEvent;
-import org.dsa.iot.calendar.abstractions.DSAIdentifier;
 import org.dsa.iot.calendar.caldav.CalDAVCalendar;
+import org.dsa.iot.calendar.event.DSAEvent;
 import org.dsa.iot.calendar.ews.ExchangeCalendar;
 import org.dsa.iot.calendar.google.GoogleCalendar;
 import org.dsa.iot.dslink.node.Node;
@@ -16,18 +14,24 @@ import org.dsa.iot.dslink.node.actions.table.Table;
 import org.dsa.iot.dslink.node.value.Value;
 import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.util.handler.Handler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import static org.dsa.iot.calendar.CalendarHandler.CALENDARS;
+import static org.dsa.iot.calendar.event.EventUtils.localDateTimeToInstant;
 
 public class Actions {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Actions.class);
+
     private Actions() {
     }
 
@@ -213,7 +217,7 @@ public class Actions {
                         Actions.addGetCalendars(calendarNode);
                         cal.attemptAuthorize(calendarNode);
                     } catch (GeneralSecurityException | IOException e) {
-                        e.printStackTrace();
+                        LOGGER.debug(e.toString());
                     }
                 }
             });
@@ -225,65 +229,62 @@ public class Actions {
 
     public static class AddExchangeCalendar extends Action {
         AddExchangeCalendar(final Node superRoot) {
-            super(Permission.CONFIG, new Handler<ActionResult>() {
-                @Override
-                public void handle(ActionResult event) {
-                    String desc = "";
-                    String email = "";
-                    String password = "";
-                    boolean autoDiscover = true;
-                    String url = "";
-                    String vers = "2010 SP2";
-                    ExchangeVersion version = ExchangeVersion.Exchange2010_SP2;
+            super(Permission.CONFIG, event -> {
+                String desc = "";
+                String email = "";
+                String password = "";
+                boolean autoDiscover = true;
+                String url = "";
+                String vers = "2010 SP2";
+                ExchangeVersion version = ExchangeVersion.Exchange2010_SP2;
 
-                    if (event.getParameter("desc") != null) {
-                        desc = event.getParameter("desc").getString();
-                    }
-                    if (event.getParameter("version") != null) {
-                        vers = event.getParameter("version").getString();
-                        version = parseExchangeVersion(vers);
-                    }
-                    if (event.getParameter("email") != null) {
-                        email = event.getParameter("email").getString();
-                    }
-                    if (event.getParameter("password") != null) {
-                        password = event.getParameter("password").getString();
-                    }
-                    if (event.getParameter("autoDiscoverUrl") != null) {
-                        autoDiscover = event.getParameter("autoDiscoverUrl").getBool();
-                    }
-                    if (event.getParameter("url") != null) {
-                        url = event.getParameter("url").getString();
-                    }
-
-                    NodeBuilder calendarBuilder = superRoot.createChild(desc);
-                    calendarBuilder.setAttribute("type", new Value("exchange"));
-                    calendarBuilder.setRoConfig("version", new Value(vers));
-                    calendarBuilder.setRoConfig("email", new Value(email));
-                    calendarBuilder.setPassword(password.toCharArray());
-                    calendarBuilder.setRoConfig("autoDiscoverUrl", new Value(autoDiscover));
-                    calendarBuilder.setRoConfig("url", new Value(url));
-                    Node calendarNode = calendarBuilder.build();
-
-                    NodeBuilder eventsBuilder = calendarNode.createChild("events");
-                    eventsBuilder.setDisplayName("Events");
-                    eventsBuilder.build();
-
-                    ExchangeCalendar cal;
-                    if (autoDiscover) {
-                        cal = new ExchangeCalendar(calendarNode, version, email, password);
-                    } else {
-                        cal = new ExchangeCalendar(calendarNode, version, email, password, url);
-                    }
-
-                    CALENDARS.put(desc, cal);
-
-                    Actions.addCreateEventNode(calendarNode);
-                    Actions.addRemoveCalendarNode(calendarNode);
-                    Actions.addRefreshCalendarNode(calendarNode);
-
-                    cal.startUpdateLoop();
+                if (event.getParameter("desc") != null) {
+                    desc = event.getParameter("desc").getString();
                 }
+                if (event.getParameter("version") != null) {
+                    vers = event.getParameter("version").getString();
+                    version = parseExchangeVersion(vers);
+                }
+                if (event.getParameter("email") != null) {
+                    email = event.getParameter("email").getString();
+                }
+                if (event.getParameter("password") != null) {
+                    password = event.getParameter("password").getString();
+                }
+                if (event.getParameter("autoDiscoverUrl") != null) {
+                    autoDiscover = event.getParameter("autoDiscoverUrl").getBool();
+                }
+                if (event.getParameter("url") != null) {
+                    url = event.getParameter("url").getString();
+                }
+
+                NodeBuilder calendarBuilder = superRoot.createChild(desc);
+                calendarBuilder.setAttribute("type", new Value("exchange"));
+                calendarBuilder.setRoConfig("version", new Value(vers));
+                calendarBuilder.setRoConfig("email", new Value(email));
+                calendarBuilder.setPassword(password.toCharArray());
+                calendarBuilder.setRoConfig("autoDiscoverUrl", new Value(autoDiscover));
+                calendarBuilder.setRoConfig("url", new Value(url));
+                Node calendarNode = calendarBuilder.build();
+
+                NodeBuilder eventsBuilder = calendarNode.createChild("events");
+                eventsBuilder.setDisplayName("Events");
+                eventsBuilder.build();
+
+                ExchangeCalendar cal;
+                if (autoDiscover) {
+                    cal = new ExchangeCalendar(calendarNode, version, email, password);
+                } else {
+                    cal = new ExchangeCalendar(calendarNode, version, email, password, url);
+                }
+
+                CALENDARS.put(desc, cal);
+
+                Actions.addCreateEventNode(calendarNode);
+                Actions.addRemoveCalendarNode(calendarNode);
+                Actions.addRefreshCalendarNode(calendarNode);
+
+                cal.startUpdateLoop();
             });
             addParameter(new Parameter("desc", ValueType.STRING));
             addParameter(new Parameter("version", ValueType.makeEnum("2007 SP1", "2010", "2010 SP1", "2010 SP2"), new Value("2010 SP2")));
@@ -321,50 +322,40 @@ public class Actions {
 
     private static class RefreshBuilder extends Action {
         RefreshBuilder(final BaseCalendar calendar) {
-            super(Permission.WRITE, new Handler<ActionResult>() {
-                @Override
-                public void handle(ActionResult event) {
-                    calendar.updateCalendar();
-                }
-            });
+            super(Permission.WRITE, event -> calendar.updateCalendar());
         }
     }
 
     private static class CreateEvent extends Action {
         CreateEvent(final BaseCalendar calendar) {
-            super(Permission.WRITE, new Handler<ActionResult>() {
-                @Override
-                public void handle(ActionResult actionResult) {
-                    String title = actionResult.getParameter("title").getString();
-                    if (title != null && !title.isEmpty()) {
-                        String desc = actionResult.getParameter("desc", new Value("")).getString();
-                        String timeRange = actionResult.getParameter("timeRange").getString();
-                        DSAEvent event = new DSAEvent(title);
-                        event.setDescription(desc);
-                        try {
-                            String[] dates = timeRange.split("/", 2);
-                            if (dates.length != 2) {
-                                throw new Exception("Unexpected dates length");
-                            }
-                            Date startDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[0]);
-                            Date endDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[1]);
-                            String location = actionResult.getParameter("location", new Value("")).getString();
-                            event.setStart(startDate);
-                            event.setEnd(endDate);
-                            event.setLocation(location);
-                            if (calendar.supportsMultipleCalendars()) {
-                                String calendar = actionResult.getParameter("calendar").getString();
-                                int indexOfPipe = calendar.lastIndexOf('|');
-                                String calTitle = calendar.substring(0, indexOfPipe);
-                                String calUid = calendar.substring(indexOfPipe + 1);
-                                event.setCalendar(new DSAIdentifier(calUid, calTitle));
-                            }
-                            calendar.createEvent(event);
-                            actionResult.getTable().addRow(Row.make(new Value("Event created.")));
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            actionResult.getTable().addRow(Row.make(new Value("Error occurred: " + e.getMessage())));
+            super(Permission.WRITE, actionResult -> {
+                String title = actionResult.getParameter("title").getString();
+                if (title != null && !title.isEmpty()) {
+                    String desc = actionResult.getParameter("desc", new Value("")).getString();
+                    String timeRange = actionResult.getParameter("timeRange").getString();
+                    try {
+                        String[] dates = timeRange.split("/", 2);
+                        if (dates.length != 2) {
+                            throw new Exception("Unexpected dates length");
                         }
+                        Date startDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[0]);
+                        Date endDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[1]);
+                        DSAEvent event = new DSAEvent(title, startDate.toInstant(), endDate.toInstant());
+                        event.setDescription(desc);
+                        String location = actionResult.getParameter("location", new Value("")).getString();
+                        event.setLocation(location);
+                        if (calendar.supportsMultipleCalendars()) {
+                            String calendar1 = actionResult.getParameter("calendar").getString();
+                            int indexOfPipe = calendar1.lastIndexOf('|');
+                            String calTitle = calendar1.substring(0, indexOfPipe);
+                            String calUid = calendar1.substring(indexOfPipe + 1);
+                            event.setCalendar(new DSAIdentifier(calUid, calTitle));
+                        }
+                        calendar.createEvent(event);
+                        actionResult.getTable().addRow(Row.make(new Value("Event created.")));
+                    } catch (Exception e) {
+                        LOGGER.debug(e.toString());
+                        actionResult.getTable().addRow(Row.make(new Value("Error occurred: " + e.getMessage())));
                     }
                 }
             });
@@ -388,44 +379,39 @@ public class Actions {
 
     private static class EditEvent extends Action {
         EditEvent(final BaseCalendar calendar) {
-            super(Permission.WRITE, new Handler<ActionResult>() {
-                @Override
-                public void handle(ActionResult actionResult) {
-                    String title = actionResult.getParameter("title").getString();
-                    if (title != null && !title.isEmpty()) {
-                        String desc = actionResult.getParameter("desc", new Value("")).getString();
-                        String timeRange = actionResult.getParameter("timeRange").getString();
-                        String location = actionResult.getParameter("location", new Value("")).getString();
-                        DSAEvent event = new DSAEvent(title);
-                        event.setDescription(desc);
-                        try {
-                            String[] dates = timeRange.split("/", 2);
-                            if (dates.length != 2) {
-                                throw new Exception("Unexpected dates length");
-                            }
-                            Date startDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[0]);
-                            Date endDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[1]);
-                            event.setStart(startDate);
-                            event.setEnd(endDate);
-                            event.setLocation(location);
-                            Node editEventNode = actionResult.getNode().getParent();
-                            editEventNode.setDisplayName(title);
-                            editEventNode.getChild("description").setValue(new Value(desc));
-                            editEventNode.getChild("start").setValue(new Value(dates[0]));
-                            editEventNode.getChild("end").setValue(new Value(dates[1]));
-                            editEventNode.getChild("location").setValue(new Value(location));
-                            if (calendar.supportsMultipleCalendars()) {
-                                String calendarId = editEventNode.getChild("calendarId").getValue().getString();
-                                event.setCalendar(new DSAIdentifier(calendarId,
-                                        editEventNode.getChild("calendar").getValue().getString()));
-                            }
-                            calendar.deleteEvent(editEventNode.getName(), false);
-                            calendar.createEvent(event);
-                            actionResult.getTable().addRow(Row.make(new Value(true)));
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            actionResult.getTable().addRow(Row.make(new Value(false)));
+            super(Permission.WRITE, actionResult -> {
+                String title = actionResult.getParameter("title").getString();
+                if (title != null && !title.isEmpty()) {
+                    String desc = actionResult.getParameter("desc", new Value("")).getString();
+                    String timeRange = actionResult.getParameter("timeRange").getString();
+                    String location = actionResult.getParameter("location", new Value("")).getString();
+                    try {
+                        String[] dates = timeRange.split("/", 2);
+                        if (dates.length != 2) {
+                            throw new Exception("Unexpected dates length");
                         }
+                        Date startDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[0]);
+                        Date endDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[1]);
+                        DSAEvent event = new DSAEvent(title, startDate.toInstant(), endDate.toInstant());
+                        event.setDescription(desc);
+                        event.setLocation(location);
+                        Node editEventNode = actionResult.getNode().getParent();
+                        editEventNode.setDisplayName(title);
+                        editEventNode.getChild("description").setValue(new Value(desc));
+                        editEventNode.getChild("start").setValue(new Value(dates[0]));
+                        editEventNode.getChild("end").setValue(new Value(dates[1]));
+                        editEventNode.getChild("location").setValue(new Value(location));
+                        if (calendar.supportsMultipleCalendars()) {
+                            String calendarId = editEventNode.getChild("calendarId").getValue().getString();
+                            event.setCalendar(new DSAIdentifier(calendarId,
+                                    editEventNode.getChild("calendar").getValue().getString()));
+                        }
+                        calendar.deleteEvent(editEventNode.getName(), false);
+                        calendar.createEvent(event);
+                        actionResult.getTable().addRow(Row.make(new Value(true)));
+                    } catch (Exception e) {
+                        LOGGER.debug(e.toString());
+                        actionResult.getTable().addRow(Row.make(new Value(false)));
                     }
                 }
             });
@@ -442,46 +428,37 @@ public class Actions {
 
     private static class RemoveEvent extends Action {
         RemoveEvent(final BaseCalendar calendar, final String uid) {
-            super(Permission.WRITE, new Handler<ActionResult>() {
-                @Override
-                public void handle(ActionResult event) {
-                    calendar.deleteEvent(uid, true);
-                }
-            });
+            super(Permission.WRITE, event -> calendar.deleteEvent(uid, true));
         }
     }
 
     private static class GetEvents extends Action {
         GetEvents(final BaseCalendar calendar) {
-            super(Permission.READ, new Handler<ActionResult>() {
-                @Override
-                public void handle(ActionResult actionResult) {
-                    try {
-                        String timeRange = actionResult.getParameter("timeRange").getString();
-                        String[] dates = timeRange.split("/", 2);
-                        Date startDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[0]);
-                        Date endDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[1]);
-                        List<DSAEvent> events = calendar.getEventsInRange(startDate, endDate);
-                        actionResult.getTable().setMode(Table.Mode.APPEND);
-                        for (DSAEvent event : events) {
-                            SimpleDateFormat simpleDateFormat = new SimpleDateFormat(BaseCalendar.DATE_PATTERN);
-                            actionResult
-                                    .getTable()
-                                    .addRow(Row.make(
-                                            new Value(event.getUniqueId()),
-                                            new Value(event.getTitle()),
-                                            new Value(event.getDescription()),
-                                            new Value(simpleDateFormat.format(event.getStart())),
-                                            new Value(simpleDateFormat.format(event.getEnd())),
-                                            new Value(event.getTimeZone()),
-                                            new Value(event.getCalendar().getTitle()),
-                                            new Value(event.getCalendar().getUid()),
-                                            new Value(event.getLocation()),
-                                            new Value(event.serializeGuests())));
-                        }
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
+            super(Permission.READ, actionResult -> {
+                String timeRange = actionResult.getParameter("timeRange").getString();
+                String[] dates = timeRange.split("/", 2);
+                DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(BaseCalendar.DATE_PATTERN);
+                LocalDateTime startDate = LocalDateTime.parse(dates[0], dateTimeFormatter);
+                LocalDateTime endDate = LocalDateTime.parse(dates[1], dateTimeFormatter);
+
+                // TODO: We needn't to assume the timezone from DGLux https://github.com/IOT-DSA/dslink-java-calendar/issues/15
+                List<DSAEvent> events = calendar.getEventsInRange(localDateTimeToInstant(startDate), localDateTimeToInstant(endDate));
+                actionResult.getTable().setMode(Table.Mode.APPEND);
+                for (DSAEvent event : events) {
+                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat(BaseCalendar.DATE_PATTERN);
+                    actionResult
+                            .getTable()
+                            .addRow(Row.make(
+                                    new Value(event.getUniqueId()),
+                                    new Value(event.getTitle()),
+                                    new Value(event.getDescription()),
+                                    new Value(simpleDateFormat.format(event.getStart())),
+                                    new Value(simpleDateFormat.format(event.getEnd())),
+                                    new Value(event.getTimeZone()),
+                                    new Value(event.getCalendar().getTitle()),
+                                    new Value(event.getCalendar().getUid()),
+                                    new Value(event.getLocation()),
+                                    new Value(event.serializeGuests())));
                 }
             });
             Parameter parameter = new Parameter("timeRange", ValueType.TIME);
@@ -504,14 +481,11 @@ public class Actions {
 
     private static class GetCalendars extends Action {
         GetCalendars(final BaseCalendar calendar) {
-            super(Permission.READ, new Handler<ActionResult>() {
-                @Override
-                public void handle(ActionResult event) {
-                    List<DSAIdentifier> calendars = calendar.getCalendars();
-                    event.getTable().setMode(Table.Mode.APPEND);
-                    for (DSAIdentifier cal : calendars) {
-                        event.getTable().addRow(Row.make(new Value(cal.getUid()), new Value(cal.getTitle())));
-                    }
+            super(Permission.READ, event -> {
+                List<DSAIdentifier> calendars = calendar.getCalendars();
+                event.getTable().setMode(Table.Mode.APPEND);
+                for (DSAIdentifier cal : calendars) {
+                    event.getTable().addRow(Row.make(new Value(cal.getUid()), new Value(cal.getTitle())));
                 }
             });
             addResult(new Parameter("ID", ValueType.STRING));
