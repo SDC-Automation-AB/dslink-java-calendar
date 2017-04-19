@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply plugin: 'findbugs'
 apply plugin: 'application'
 
-version '0.2.0'
+version '0.2.1'
 
 mainClassName = 'org.dsa.iot.calendar.Main'
 sourceCompatibility = 1.8
@@ -22,9 +22,9 @@ repositories {
 
 dependencies {
     // DSLink
-    compile 'org.iot-dsa:dslink:0.16.0-SNAPSHOT'
-    compile 'org.iot-dsa:commons:0.16.0-SNAPSHOT'
-    compile 'org.iot-dsa:historian:0.16.0-SNAPSHOT'
+    compile 'org.iot-dsa:dslink:0.17.2'
+    compile 'org.iot-dsa:commons:0.17.2'
+    compile 'org.iot-dsa:historian:0.17.2'
 
     // CalDAV support
     compile 'org.osaf:caldav4j:0.8-SNAPSHOT'
