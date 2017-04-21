@@ -175,11 +175,11 @@ public class GoogleCalendar extends BaseCalendar {
             for (CalendarListEntry listEntry : calendarList.getItems()) {
                 for (Event event : calendar.events().list(listEntry.getId()).execute().getItems()) {
                     EventDateTime eventStart = event.getStart();
-                    if (eventStart == null || eventStart.getDate() == null || eventStart.getDateTime() == null) {
+                    if (eventStart == null || (eventStart.getDate() == null && eventStart.getDateTime() == null)) {
                         throw new IllegalArgumentException("Start date can not be null.");
                     }
                     EventDateTime eventEnd = event.getEnd();
-                    if (eventEnd == null || eventEnd.getDate() == null || eventEnd.getDateTime() == null) {
+                    if (eventEnd == null || (eventEnd.getDate() == null && eventEnd.getDateTime() == null)) {
                         throw new IllegalArgumentException("End date can not be null.");
                     }
 

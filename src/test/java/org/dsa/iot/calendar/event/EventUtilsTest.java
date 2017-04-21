@@ -114,7 +114,7 @@ public class EventUtilsTest {
     }
 
     /**
-     * |3 hours free|--|3 Hours free|--|
+     * *|3 hours free|--|3 Hours free|--|
      */
     @Test
     public void first_free_time_before_all_events() {

@@ -45,7 +45,7 @@ public class CalendarHandler extends DSLinkHandler {
                                 String host = calendarNode.getRoConfig("host").getString();
                                 int port = calendarNode.getRoConfig("port").getNumber().intValue();
                                 String path = calendarNode.getRoConfig("path").getString();
-                                Node eventsNode = calendarNode.getChild("events");
+                                Node eventsNode = calendarNode.getChild("events", false);
                                 cal = new CalDAVCalendar(host, port, path, eventsNode);
                                 CALENDARS.put(calendarNode.getName(), cal);
                                 break;
