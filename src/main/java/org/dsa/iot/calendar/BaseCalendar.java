@@ -9,6 +9,7 @@ import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.provider.LoopProvider;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +19,8 @@ import java.util.concurrent.TimeUnit;
 public abstract class BaseCalendar {
     public static final String DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
 
-    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(DATE_PATTERN);
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(DATE_PATTERN)
+                                                                         .withZone(ZoneId.systemDefault());
 
     private static final int UPDATE_LOOP_DELAY = 30;
 
