@@ -32,7 +32,7 @@ dependencies {
 
     // Google Calendar support
     compile 'com.google.api-client:google-api-client-java6:1.22.0'
-    compile 'com.google.apis:google-api-services-calendar:v3-rev202-1.22.0'
+    compile 'com.google.apis:google-api-services-calendar:v3-rev249-1.22.0'
 
     // Exchange Web Services Support
     compile 'com.microsoft.ews-java-api:ews-java-api:2.0'
