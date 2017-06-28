@@ -174,53 +174,63 @@ public class GoogleCalendar extends BaseCalendar {
             CalendarList calendarList = calendar.calendarList().list().execute();
             for (CalendarListEntry listEntry : calendarList.getItems()) {
                 for (Event event : calendar.events().list(listEntry.getId()).execute().getItems()) {
-                    EventDateTime eventStart = event.getStart();
-                    if (eventStart == null || (eventStart.getDate() == null && eventStart.getDateTime() == null)) {
-                        throw new IllegalArgumentException("Start date can not be null.");
+                    DSAEvent dsaEvent = parseEvent(listEntry, event);
+                    if (dsaEvent != null) {
+                        events.add(dsaEvent);
                     }
-                    EventDateTime eventEnd = event.getEnd();
-                    if (eventEnd == null || (eventEnd.getDate() == null && eventEnd.getDateTime() == null)) {
-                        throw new IllegalArgumentException("End date can not be null.");
-                    }
-
-                    // TODO: Check logic
-                    Instant start = new Date((eventStart.getDate() != null)
-                            ? eventStart.getDate().getValue()
-                            : eventStart.getDateTime().getValue()).toInstant();
-                    Instant end = new Date((eventEnd.getDate() != null)
-                            ? eventEnd.getDate().getValue()
-                            : eventEnd.getDateTime().getValue()).toInstant();
-
-                    DSAEvent dsaEvent = new DSAEvent(event.getSummary(), start, end);
-                    dsaEvent.setUniqueId(event.getId());
-                    dsaEvent.setDescription(event.getDescription());
-                    dsaEvent.setLocation(event.getLocation());
-                    dsaEvent.setCalendar(new DSAIdentifier(listEntry.getId(), listEntry.getSummary()));
-                    if (event.getAttendees() != null) {
-                        for (EventAttendee attendee : event.getAttendees()) {
-                            DSAGuest guest = new DSAGuest();
-                            if (attendee.getId() != null) {
-                                guest.setUniqueId(attendee.getId());
-                            }
-                            if (attendee.getDisplayName() != null) {
-                                guest.setDisplayName(attendee.getDisplayName());
-                            }
-                            if (attendee.getEmail() != null) {
-                                guest.setEmail(attendee.getEmail());
-                            }
-                            if (attendee.getOrganizer() != null) {
-                                guest.setOrganizer(attendee.getOrganizer());
-                            }
-                            dsaEvent.getGuests().add(guest);
-                        }
-                    }
-                    events.add(dsaEvent);
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
         return events;
+    }
+
+    private DSAEvent parseEvent(CalendarListEntry listEntry, Event event) {
+        EventDateTime eventStart = event.getStart();
+        if (eventStart == null || (eventStart.getDate() == null && eventStart.getDateTime() == null)) {
+            // Skip this event
+            return null;
+        }
+        EventDateTime eventEnd = event.getEnd();
+        if (eventEnd == null || (eventEnd.getDate() == null && eventEnd.getDateTime() == null)) {
+            // Skip this event
+            return null;
+        }
+
+        // TODO: Check logic
+        Instant start = new Date((eventStart.getDate() != null)
+                ? eventStart.getDate().getValue()
+                : eventStart.getDateTime().getValue()).toInstant();
+        Instant end = new Date((eventEnd.getDate() != null)
+                ? eventEnd.getDate().getValue()
+                : eventEnd.getDateTime().getValue()).toInstant();
+
+        DSAEvent dsaEvent = new DSAEvent(event.getSummary(), start, end);
+        dsaEvent.setUniqueId(event.getId());
+        dsaEvent.setDescription(event.getDescription());
+        dsaEvent.setLocation(event.getLocation());
+        dsaEvent.setCalendar(new DSAIdentifier(listEntry.getId(), listEntry.getSummary()));
+        if (event.getAttendees() != null) {
+            for (EventAttendee attendee : event.getAttendees()) {
+                DSAGuest guest = new DSAGuest();
+                if (attendee.getId() != null) {
+                    guest.setUniqueId(attendee.getId());
+                }
+                if (attendee.getDisplayName() != null) {
+                    guest.setDisplayName(attendee.getDisplayName());
+                }
+                if (attendee.getEmail() != null) {
+                    guest.setEmail(attendee.getEmail());
+                }
+                if (attendee.getOrganizer() != null) {
+                    guest.setOrganizer(attendee.getOrganizer());
+                }
+                dsaEvent.getGuests().add(guest);
+            }
+        }
+
+        return dsaEvent;
     }
 
     @Override
