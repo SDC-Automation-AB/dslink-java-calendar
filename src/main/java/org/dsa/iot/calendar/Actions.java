@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +33,7 @@ public class Actions {
     }
 
     static Node addAddCalDavCalendarNode(Node superRoot) {
-        NodeBuilder builder = superRoot.createChild("addCalDavCalendar");
+        NodeBuilder builder = superRoot.createChild("addCalDavCalendar", false);
         builder.setDisplayName("Add CalDAV Calendar");
         builder.setSerializable(false);
         builder.setAction(new AddCalDAVCalendar(superRoot));
@@ -42,7 +41,7 @@ public class Actions {
     }
 
     static Node addAddGoogleCalendarNode(Node superRoot) {
-        NodeBuilder builder = superRoot.createChild("addGoogleCalendar");
+        NodeBuilder builder = superRoot.createChild("addGoogleCalendar", false);
         builder.setDisplayName("Add Google Calendar");
         builder.setSerializable(false);
         builder.setAction(new AddGoogleCalendar(superRoot));
@@ -50,7 +49,7 @@ public class Actions {
     }
 
     static Node addAddExchangeCalendarNode(Node superRoot) {
-        NodeBuilder builder = superRoot.createChild("addExchangeCalendar");
+        NodeBuilder builder = superRoot.createChild("addExchangeCalendar", false);
         builder.setDisplayName("Add Exchange Calendar");
         builder.setSerializable(false);
         builder.setAction(new AddExchangeCalendar(superRoot));
@@ -58,7 +57,7 @@ public class Actions {
     }
 
     static Node addRemoveCalendarNode(Node calendarNode) {
-        NodeBuilder rmBuilder = calendarNode.createChild("removeAccount");
+        NodeBuilder rmBuilder = calendarNode.createChild("removeAccount", false);
         rmBuilder.setDisplayName("Remove Account");
         rmBuilder.setSerializable(false);
         rmBuilder.setAction(new RemoveAccount());
@@ -66,7 +65,7 @@ public class Actions {
     }
 
     static Node addRefreshCalendarNode(Node calendarNode) {
-        NodeBuilder refreshBuilder = calendarNode.createChild("refreshCalendar");
+        NodeBuilder refreshBuilder = calendarNode.createChild("refreshCalendar", false);
         refreshBuilder.setDisplayName("Refresh Calendar");
         refreshBuilder.setSerializable(false);
         refreshBuilder.setAction(new RefreshBuilder(CALENDARS.get(calendarNode.getName())));
@@ -75,7 +74,7 @@ public class Actions {
 
     // TODO: We need to refresh calendars parameter when calendar is refreshed, if the provider supports multiple calendars.
     static Node addCreateEventNode(Node calendarNode) {
-        NodeBuilder createEventNode = calendarNode.createChild("createAnEvent");
+        NodeBuilder createEventNode = calendarNode.createChild("createAnEvent", false);
         createEventNode.setDisplayName("Create Event");
         createEventNode.setSerializable(false);
         createEventNode.setAction(new CreateEvent(CALENDARS.get(calendarNode.getName())));
@@ -83,7 +82,7 @@ public class Actions {
     }
 
     public static Node addEditEventNode(Node eventNode) {
-        NodeBuilder editEventNode = eventNode.createChild("editEvent");
+        NodeBuilder editEventNode = eventNode.createChild("editEvent", false);
         editEventNode.setDisplayName("Edit Event");
         editEventNode.setSerializable(false);
         editEventNode.setAction(new EditEvent(CALENDARS.get(eventNode.getParent().getParent().getName())));
@@ -91,7 +90,7 @@ public class Actions {
     }
 
     public static Node addDeleteEventNode(Node eventNode) {
-        NodeBuilder deleteEventNode = eventNode.createChild("deleteEvent");
+        NodeBuilder deleteEventNode = eventNode.createChild("deleteEvent", false);
         deleteEventNode.setDisplayName("Delete Event");
         deleteEventNode.setSerializable(false);
         deleteEventNode.setAction(new RemoveEvent(CALENDARS.get(eventNode.getParent().getParent().getName()), eventNode.getName()));
@@ -99,7 +98,7 @@ public class Actions {
     }
 
     static Node addGetEventsRange(Node calendarNode) {
-        NodeBuilder getEventsRange = calendarNode.createChild("getEventsRange");
+        NodeBuilder getEventsRange = calendarNode.createChild("getEventsRange", false);
         getEventsRange.setDisplayName("Get Events Range");
         getEventsRange.setSerializable(false);
         getEventsRange.setAction(new GetEvents(CALENDARS.get(calendarNode.getName())));
@@ -107,7 +106,7 @@ public class Actions {
     }
 
     static Node addGetCalendars(Node calendarNode) {
-        NodeBuilder getCalendars = calendarNode.createChild("getCalendars");
+        NodeBuilder getCalendars = calendarNode.createChild("getCalendars", false);
         getCalendars.setDisplayName("Get Calendars");
         getCalendars.setSerializable(false);
         getCalendars.setAction(new GetCalendars(CALENDARS.get(calendarNode.getName())));
@@ -146,7 +145,7 @@ public class Actions {
                         path = event.getParameter("calendarPath").getString();
                     }
 
-                    NodeBuilder calendarBuilder = superRoot.createChild(desc);
+                    NodeBuilder calendarBuilder = superRoot.createChild(desc, false);
                     calendarBuilder.setAttribute("type", new Value("caldav"));
                     calendarBuilder.setRoConfig("username", new Value(username));
                     calendarBuilder.setPassword(password.toCharArray());
@@ -155,7 +154,7 @@ public class Actions {
                     calendarBuilder.setRoConfig("path", new Value(path));
                     Node calendarNode = calendarBuilder.build();
 
-                    NodeBuilder eventsBuilder = calendarNode.createChild("events");
+                    NodeBuilder eventsBuilder = calendarNode.createChild("events", false);
                     eventsBuilder.setDisplayName("Events");
                     Node events = eventsBuilder.build();
 
@@ -194,13 +193,13 @@ public class Actions {
                         clientSecret = event.getParameter("clientSecret").getString();
                     }
 
-                    NodeBuilder calendarBuilder = superRoot.createChild(desc);
+                    NodeBuilder calendarBuilder = superRoot.createChild(desc, false);
                     calendarBuilder.setAttribute("type", new Value("google"));
                     calendarBuilder.setRoConfig("clientId", new Value(clientId));
                     calendarBuilder.setRoConfig("clientSecret", new Value(clientSecret));
                     Node calendarNode = calendarBuilder.build();
 
-                    NodeBuilder eventsBuilder = calendarNode.createChild("events");
+                    NodeBuilder eventsBuilder = calendarNode.createChild("events", false);
                     eventsBuilder.setDisplayName("Events");
                     eventsBuilder.build();
 
@@ -214,7 +213,7 @@ public class Actions {
                         Actions.addGetEventsRange(calendarNode);
                         Actions.addGetCalendars(calendarNode);
                         cal.attemptAuthorize(calendarNode);
-                    } catch (GeneralSecurityException | IOException e) {
+                    } catch (IOException e) {
                         LOGGER.debug(e.toString());
                     }
                 }
@@ -256,7 +255,7 @@ public class Actions {
                     url = event.getParameter("url").getString();
                 }
 
-                NodeBuilder calendarBuilder = superRoot.createChild(desc);
+                NodeBuilder calendarBuilder = superRoot.createChild(desc, false);
                 calendarBuilder.setAttribute("type", new Value("exchange"));
                 calendarBuilder.setRoConfig("version", new Value(vers));
                 calendarBuilder.setRoConfig("email", new Value(email));
@@ -265,7 +264,7 @@ public class Actions {
                 calendarBuilder.setRoConfig("url", new Value(url));
                 Node calendarNode = calendarBuilder.build();
 
-                NodeBuilder eventsBuilder = calendarNode.createChild("events");
+                NodeBuilder eventsBuilder = calendarNode.createChild("events", false);
                 eventsBuilder.setDisplayName("Events");
                 eventsBuilder.build();
 
@@ -312,7 +311,7 @@ public class Actions {
                 @Override
                 public void handle(ActionResult event) {
                     Node calendar = event.getNode().getParent();
-                    event.getNode().getParent().getParent().removeChild(calendar);
+                    event.getNode().getParent().getParent().removeChild(calendar, false);
                 }
             });
         }
@@ -395,14 +394,14 @@ public class Actions {
                         event.setLocation(location);
                         Node editEventNode = actionResult.getNode().getParent();
                         editEventNode.setDisplayName(title);
-                        editEventNode.getChild("description").setValue(new Value(desc));
-                        editEventNode.getChild("start").setValue(new Value(dates[0]));
-                        editEventNode.getChild("end").setValue(new Value(dates[1]));
-                        editEventNode.getChild("location").setValue(new Value(location));
+                        editEventNode.getChild("description", false).setValue(new Value(desc));
+                        editEventNode.getChild("start", false).setValue(new Value(dates[0]));
+                        editEventNode.getChild("end", false).setValue(new Value(dates[1]));
+                        editEventNode.getChild("location", false).setValue(new Value(location));
                         if (calendar.supportsMultipleCalendars()) {
-                            String calendarId = editEventNode.getChild("calendarId").getValue().getString();
+                            String calendarId = editEventNode.getChild("calendarId", false).getValue().getString();
                             event.setCalendar(new DSAIdentifier(calendarId,
-                                    editEventNode.getChild("calendar").getValue().getString()));
+                                    editEventNode.getChild("calendar", false).getValue().getString()));
                         }
                         calendar.deleteEvent(editEventNode.getName(), false);
                         calendar.createEvent(event);

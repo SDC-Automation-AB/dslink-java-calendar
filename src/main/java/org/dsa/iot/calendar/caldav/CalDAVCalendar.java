@@ -78,7 +78,7 @@ public class CalDAVCalendar extends BaseCalendar {
         } catch (CalDAV4JException ignored) {
         }
         if (destroyNode) {
-            eventsNode.removeChild(uid);
+            eventsNode.removeChild(uid, false);
         }
     }
 

@@ -23,7 +23,6 @@ import org.dsa.iot.dslink.node.value.ValueType;
 
 import java.io.File;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,8 +42,8 @@ public class GoogleCalendar extends BaseCalendar {
     private Credential credential;
     private final String userId;
 
-    public GoogleCalendar(Node calendarNode, String clientId, String clientSecret) throws GeneralSecurityException, IOException {
-        super(calendarNode.getChild("events"));
+    public GoogleCalendar(Node calendarNode, String clientId, String clientSecret) {
+        super(calendarNode.getChild("events", false));
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         httpTransport = new NetHttpTransport();
@@ -68,13 +67,13 @@ public class GoogleCalendar extends BaseCalendar {
             url.setRedirectUri(GoogleOAuthConstants.OOB_REDIRECT_URI);
             url.set("accessType", "offline");
             url.set("approvalPrompt", "force");
-            final Node urlNode = calendarNode.createChild("googleLoginUrl")
+            final Node urlNode = calendarNode.createChild("googleLoginUrl", false)
                     .setDisplayName("Google Login URL")
                     .setSerializable(false)
                     .setValueType(ValueType.STRING)
                     .setValue(new Value(url.build()))
                     .build();
-            final Node codeNode = calendarNode.createChild("googleLoginCode")
+            final Node codeNode = calendarNode.createChild("googleLoginCode", false)
                     .setDisplayName("Google Login Code")
                     .setSerializable(false)
                     .setValueType(ValueType.STRING)
@@ -85,8 +84,8 @@ public class GoogleCalendar extends BaseCalendar {
                 if (value != null && value.getString() != null) {
                     try {
                         authorize(flow, value.getString());
-                        calendarNode.removeChild(urlNode);
-                        calendarNode.removeChild(codeNode);
+                        calendarNode.removeChild(urlNode, false);
+                        calendarNode.removeChild(codeNode, false);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -157,10 +156,10 @@ public class GoogleCalendar extends BaseCalendar {
     @Override
     public void deleteEvent(String uid, boolean destroyNode) {
         try {
-            String calendarId = eventsNode.getChild(uid).getChild("calendarId").getValue().getString();
+            String calendarId = eventsNode.getChild(uid, false).getChild("calendarId", false).getValue().getString();
             calendar.events().delete(calendarId, uid).execute();
             if (destroyNode) {
-                eventsNode.removeChild(uid);
+                eventsNode.removeChild(uid, false);
             }
         } catch (IOException | NullPointerException e) {
             e.printStackTrace();

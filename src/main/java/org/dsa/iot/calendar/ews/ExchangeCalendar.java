@@ -54,7 +54,7 @@ public class ExchangeCalendar extends BaseCalendar {
     private static final long ONE_YEAR_IN_MILLISECONDS = 31556952000L;
 
     public ExchangeCalendar(Node calendarNode, ExchangeVersion exchangeVersion, String email, String password) {
-        super(calendarNode.getChild("events"));
+        super(calendarNode.getChild("events", false));
         this.node = calendarNode;
         this.email = email;
         this.password = password;
@@ -154,7 +154,7 @@ public class ExchangeCalendar extends BaseCalendar {
         }
 
         if (destroyNode) {
-            eventsNode.removeChild(uid);
+            eventsNode.removeChild(uid, false);
         }
 
     }
@@ -236,9 +236,9 @@ public class ExchangeCalendar extends BaseCalendar {
         act.addParameter(new Parameter("autoDiscoverUrl", ValueType.BOOL, new Value(autoDiscover)));
         act.addParameter(new Parameter("url", ValueType.STRING, new Value(url)));
 
-        Node editNode = node.getChild("edit");
+        Node editNode = node.getChild("edit", false);
         if (editNode == null) {
-            node.createChild("edit")
+            node.createChild("edit", false)
                     .setDisplayName("Edit")
                     .setAction(act)
                     .setSerializable(false)
