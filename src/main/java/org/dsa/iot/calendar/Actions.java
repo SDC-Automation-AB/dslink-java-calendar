@@ -56,7 +56,7 @@ public class Actions {
         return builder.build();
     }
 
-    static Node addRemoveCalendarNode(Node calendarNode) {
+    public static Node addRemoveCalendarNode(Node calendarNode) {
         NodeBuilder rmBuilder = calendarNode.createChild("removeAccount", false);
         rmBuilder.setDisplayName("Remove Account");
         rmBuilder.setSerializable(false);
@@ -64,7 +64,7 @@ public class Actions {
         return rmBuilder.build();
     }
 
-    static Node addRefreshCalendarNode(Node calendarNode) {
+    public static Node addRefreshCalendarNode(Node calendarNode) {
         NodeBuilder refreshBuilder = calendarNode.createChild("refreshCalendar", false);
         refreshBuilder.setDisplayName("Refresh Calendar");
         refreshBuilder.setSerializable(false);
@@ -73,7 +73,7 @@ public class Actions {
     }
 
     // TODO: We need to refresh calendars parameter when calendar is refreshed, if the provider supports multiple calendars.
-    static Node addCreateEventNode(Node calendarNode) {
+    public static Node addCreateEventNode(Node calendarNode) {
         NodeBuilder createEventNode = calendarNode.createChild("createAnEvent", false);
         createEventNode.setDisplayName("Create Event");
         createEventNode.setSerializable(false);
@@ -97,7 +97,7 @@ public class Actions {
         return deleteEventNode.build();
     }
 
-    static Node addGetEventsRange(Node calendarNode) {
+    public static Node addGetEventsRange(Node calendarNode) {
         NodeBuilder getEventsRange = calendarNode.createChild("getEventsRange", false);
         getEventsRange.setDisplayName("Get Events Range");
         getEventsRange.setSerializable(false);
@@ -105,7 +105,7 @@ public class Actions {
         return getEventsRange.build();
     }
 
-    static Node addGetCalendars(Node calendarNode) {
+    public static Node addGetCalendars(Node calendarNode) {
         NodeBuilder getCalendars = calendarNode.createChild("getCalendars", false);
         getCalendars.setDisplayName("Get Calendars");
         getCalendars.setSerializable(false);
@@ -206,12 +206,6 @@ public class Actions {
                     try {
                         GoogleCalendar cal = new GoogleCalendar(calendarNode, clientId, clientSecret);
                         CALENDARS.put(desc, cal);
-
-                        Actions.addCreateEventNode(calendarNode);
-                        Actions.addRemoveCalendarNode(calendarNode);
-                        Actions.addRefreshCalendarNode(calendarNode);
-                        Actions.addGetEventsRange(calendarNode);
-                        Actions.addGetCalendars(calendarNode);
                         cal.attemptAuthorize(calendarNode);
                     } catch (IOException e) {
                         LOGGER.debug(e.toString());

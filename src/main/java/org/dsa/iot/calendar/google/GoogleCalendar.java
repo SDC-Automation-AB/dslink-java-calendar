@@ -12,6 +12,7 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.*;
+import org.dsa.iot.calendar.Actions;
 import org.dsa.iot.calendar.BaseCalendar;
 import org.dsa.iot.calendar.DSAIdentifier;
 import org.dsa.iot.calendar.event.DSAEvent;
@@ -86,6 +87,11 @@ public class GoogleCalendar extends BaseCalendar {
                         authorize(flow, value.getString());
                         calendarNode.removeChild(urlNode, false);
                         calendarNode.removeChild(codeNode, false);
+                        Actions.addCreateEventNode(calendarNode);
+                        Actions.addRemoveCalendarNode(calendarNode);
+                        Actions.addRefreshCalendarNode(calendarNode);
+                        Actions.addGetEventsRange(calendarNode);
+                        Actions.addGetCalendars(calendarNode);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
