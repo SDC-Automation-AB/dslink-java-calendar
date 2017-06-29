@@ -42,9 +42,9 @@ public class DSAEvent {
      * @return True if the datetime is within this event's range.
      */
     public final boolean isInRange(Instant start, Instant end) {
-        Instant now = Instant.now(clock);
-
-        return now.isAfter(start) && now.isBefore(end);
+        TimeRange eventRange = new TimeRange(this.start, this.end);
+        TimeRange requestedRange = new TimeRange(start, end);
+        return TimeRange.areOverlapping(eventRange, requestedRange);
     }
 
     public String getUniqueId() {
