@@ -1,12 +1,18 @@
 package org.dsa.iot.calendar.event;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 
 public class EventUtils {
+    private static final String DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_PATTERN)
+                                                                         .withZone(ZoneId.systemDefault());
     protected static Clock clock = Clock.systemDefaultZone();
 
     private EventUtils() {
@@ -69,5 +75,13 @@ public class EventUtils {
     // TODO: We needn't to assume the timezone from DGLux https://github.com/IOT-DSA/dslink-java-calendar/issues/15
     public static Instant localDateTimeToInstant(LocalDateTime localDateTime) {
         return localDateTime.atZone(ZoneId.systemDefault()).toInstant();
+    }
+
+    public static String instantToTimeString(Instant instant) {
+        return DATE_TIME_FORMATTER.format(instant);
+    }
+
+    public static Instant timeStringToInstant(String timeString) throws ParseException {
+        return new SimpleDateFormat(DATE_PATTERN).parse(timeString).toInstant();
     }
 }

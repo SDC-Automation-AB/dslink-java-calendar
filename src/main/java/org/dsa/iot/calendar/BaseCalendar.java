@@ -1,6 +1,7 @@
 package org.dsa.iot.calendar;
 
 import org.dsa.iot.calendar.event.DSAEvent;
+import org.dsa.iot.calendar.event.EventUtils;
 import org.dsa.iot.calendar.guest.DSAGuest;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
@@ -9,16 +10,12 @@ import org.dsa.iot.dslink.node.value.ValueType;
 import org.dsa.iot.dslink.provider.LoopProvider;
 
 import java.time.Instant;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public abstract class BaseCalendar {
-    public static final String DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
-
-    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(DATE_PATTERN);
 
     private static final int UPDATE_LOOP_DELAY = 30;
 
@@ -119,10 +116,10 @@ public abstract class BaseCalendar {
             eventNode.getChild("description", false).setValue(new Value(description));
         }
         if (eventNode.hasChild("start", false)) {
-            eventNode.getChild("start", false).setValue(new Value(dateTimeFormatter.format(start)));
+            eventNode.getChild("start", false).setValue(new Value(EventUtils.instantToTimeString(start)));
         }
         if (eventNode.hasChild("end", false)) {
-            eventNode.getChild("end", false).setValue(new Value(dateTimeFormatter.format(end)));
+            eventNode.getChild("end", false).setValue(new Value(EventUtils.instantToTimeString(end)));
         }
         if (timeZone != null && eventNode.hasChild("timeZone", false)) {
             eventNode.getChild("timeZone", false).setValue(new Value(timeZone));
