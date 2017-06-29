@@ -3,6 +3,7 @@ package org.dsa.iot.calendar;
 import microsoft.exchange.webservices.data.core.enumeration.misc.ExchangeVersion;
 import org.dsa.iot.calendar.caldav.CalDAVCalendar;
 import org.dsa.iot.calendar.event.DSAEvent;
+import org.dsa.iot.calendar.event.EventUtils;
 import org.dsa.iot.calendar.ews.ExchangeCalendar;
 import org.dsa.iot.calendar.google.GoogleCalendar;
 import org.dsa.iot.dslink.node.Node;
@@ -19,15 +20,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import static org.dsa.iot.calendar.CalendarHandler.CALENDARS;
-import static org.dsa.iot.calendar.event.EventUtils.localDateTimeToInstant;
+import static org.dsa.iot.calendar.event.EventUtils.timeStringToInstant;
 
 public class Actions {
     private static final Logger LOGGER = LoggerFactory.getLogger(Actions.class);
@@ -338,9 +336,9 @@ public class Actions {
                         if (dates.length != 2) {
                             throw new Exception("Unexpected dates length");
                         }
-                        Date startDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[0]);
-                        Date endDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[1]);
-                        DSAEvent event = new DSAEvent(title, startDate.toInstant(), endDate.toInstant());
+                        Instant startDate = EventUtils.timeStringToInstant(dates[0]);
+                        Instant endDate = EventUtils.timeStringToInstant(dates[1]);
+                        DSAEvent event = new DSAEvent(title, startDate, endDate);
                         event.setDescription(desc);
                         String location = actionResult.getParameter("location", new Value("")).getString();
                         event.setLocation(location);
@@ -390,9 +388,9 @@ public class Actions {
                         if (dates.length != 2) {
                             throw new Exception("Unexpected dates length");
                         }
-                        Date startDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[0]);
-                        Date endDate = new SimpleDateFormat(BaseCalendar.DATE_PATTERN).parse(dates[1]);
-                        DSAEvent event = new DSAEvent(title, startDate.toInstant(), endDate.toInstant());
+                        Instant startDate = EventUtils.timeStringToInstant(dates[0]);
+                        Instant endDate = EventUtils.timeStringToInstant(dates[1]);
+                        DSAEvent event = new DSAEvent(title, startDate, endDate);
                         event.setDescription(desc);
                         event.setLocation(location);
                         Node editEventNode = actionResult.getNode().getParent();
@@ -435,30 +433,31 @@ public class Actions {
     private static class GetEvents extends Action {
         GetEvents(final BaseCalendar calendar) {
             super(Permission.READ, actionResult -> {
-                String timeRange = actionResult.getParameter("timeRange").getString();
-                String[] dates = timeRange.split("/", 2);
-                DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(BaseCalendar.DATE_PATTERN);
-                LocalDateTime startDate = LocalDateTime.parse(dates[0], dateTimeFormatter);
-                LocalDateTime endDate = LocalDateTime.parse(dates[1], dateTimeFormatter);
+                try {
+                    String timeRange = actionResult.getParameter("timeRange").getString();
+                    String[] dates = timeRange.split("/", 2);
 
-                // TODO: We needn't to assume the timezone from DGLux https://github.com/IOT-DSA/dslink-java-calendar/issues/15
-                List<DSAEvent> events = calendar.getEventsInRange(localDateTimeToInstant(startDate), localDateTimeToInstant(endDate));
-                actionResult.getTable().setMode(Table.Mode.APPEND);
-                for (DSAEvent event : events) {
-                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat(BaseCalendar.DATE_PATTERN);
-                    actionResult
-                            .getTable()
-                            .addRow(Row.make(
-                                    new Value(event.getUniqueId()),
-                                    new Value(event.getTitle()),
-                                    new Value(event.getDescription()),
-                                    new Value(simpleDateFormat.format(event.getStart())),
-                                    new Value(simpleDateFormat.format(event.getEnd())),
-                                    new Value(event.getTimeZone()),
-                                    new Value(event.getCalendar().getTitle()),
-                                    new Value(event.getCalendar().getUid()),
-                                    new Value(event.getLocation()),
-                                    new Value(event.serializeGuests())));
+                    // TODO: We needn't to assume the timezone from DGLux https://github.com/IOT-DSA/dslink-java-calendar/issues/15
+                    List<DSAEvent> events = calendar.getEventsInRange(timeStringToInstant(dates[0]), timeStringToInstant(dates[1]));
+                    actionResult.getTable().setMode(Table.Mode.APPEND);
+                    for (DSAEvent event : events) {
+                        actionResult
+                                .getTable()
+                                .addRow(Row.make(
+                                        new Value(event.getUniqueId()),
+                                        new Value(event.getTitle()),
+                                        new Value(event.getDescription()),
+                                        new Value(EventUtils.instantToTimeString(event.getStart())),
+                                        new Value(EventUtils.instantToTimeString(event.getEnd())),
+                                        new Value(event.getTimeZone()),
+                                        new Value(event.getCalendar().getTitle()),
+                                        new Value(event.getCalendar().getUid()),
+                                        new Value(event.getLocation()),
+                                        new Value(event.serializeGuests())));
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    actionResult.getTable().addRow(Row.make(new Value("Error occurred: " + e.getMessage())));
                 }
             });
             Parameter parameter = new Parameter("timeRange", ValueType.TIME);
