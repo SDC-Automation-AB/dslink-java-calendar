@@ -1,5 +1,5 @@
 apply plugin: 'java'
-apply plugin: 'findbugs'
+//apply plugin: 'findbugs'
 apply plugin: 'application'
 
 version '0.2.2'
@@ -29,22 +29,22 @@ repositories {
 
 dependencies {
     // DSLink
-    compile 'org.iot-dsa:dslink:0.17.2'
-    compile 'org.iot-dsa:commons:0.17.2'
-    compile 'org.iot-dsa:historian:0.17.2'
+    implementation 'org.iot-dsa:dslink:0.17.2'
+    implementation 'org.iot-dsa:commons:0.17.2'
+    implementation 'org.iot-dsa:historian:0.17.2'
 
     // CalDAV support
-    compile 'org.osaf:caldav4j:0.8-SNAPSHOT'
-    compile 'com.fasterxml.uuid:java-uuid-generator:3.1.4'
+    implementation 'org.osaf:caldav4j:0.8-SNAPSHOT'
+    implementation 'com.fasterxml.uuid:java-uuid-generator:3.1.4'
 
     // Google Calendar support
-    compile 'com.google.api-client:google-api-client-java6:1.22.0'
-    compile 'com.google.apis:google-api-services-calendar:v3-rev249-1.22.0'
+    implementation 'com.google.api-client:google-api-client-java6:1.22.0'
+    implementation 'com.google.apis:google-api-services-calendar:v3-rev249-1.22.0'
 
     // Exchange Web Services Support
-    compile 'com.microsoft.ews-java-api:ews-java-api:2.0'
-    compile 'junit:junit:4.12'
-    testCompile 'org.assertj:assertj-core:3.5.2'
+    implementation 'com.microsoft.ews-java-api:ews-java-api:2.0'
+    implementation 'junit:junit:4.12'
+    testImplementation 'org.assertj:assertj-core:3.5.2'
 }
 
 apply plugin: 'checkstyle'
@@ -53,12 +53,12 @@ checkstyle {
     toolVersion = '6.17'
 }
 
-tasks.withType(FindBugs) {
+/*tasks.withType(FindBugs) {
     reports {
         xml.enabled = false
         html.enabled = true
     }
-}
+}*/
 
 run {
     args System.getProperty("exec.args", "").split()
